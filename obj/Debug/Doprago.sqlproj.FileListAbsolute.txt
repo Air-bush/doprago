@@ -1,0 +1,11 @@
+c:\Programing\Doprago\Database\Doprago\bin\Debug\Doprago.dacpac
+c:\Programing\Doprago\Database\Doprago\bin\Debug\Doprago.deps.json
+c:\Programing\Doprago\Database\Doprago\bin\Debug\Doprago.dll
+c:\Programing\Doprago\Database\Doprago\bin\Debug\Doprago.pdb
+c:\Programing\Doprago\Database\Doprago\obj\Debug\Doprago.GeneratedMSBuildEditorConfig.editorconfig
+c:\Programing\Doprago\Database\Doprago\obj\Debug\Model.xml
+c:\Programing\Doprago\Database\Doprago\obj\Debug\refactor.xml
+c:\Programing\Doprago\Database\Doprago\obj\Debug\postdeploy.sql
+c:\Programing\Doprago\Database\Doprago\obj\Debug\predeploy.sql
+c:\Programing\Doprago\Database\Doprago\obj\Debug\Doprago.dll
+c:\Programing\Doprago\Database\Doprago\obj\Debug\Doprago.pdb
