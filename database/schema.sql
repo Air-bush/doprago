@@ -24,22 +24,21 @@ CREATE TABLE feed_info (
   feed_publisher_name VARCHAR(255) NOT NULL,
   feed_publisher_url  VARCHAR(255) NOT NULL,
   feed_lang           VARCHAR(255) NOT NULL,
-  feed_start_date     NUMERIC(8) NULL,
-  feed_end_date       NUMERIC(8) NULL,
+  feed_start_date     INT NULL,
+  feed_end_date       INT NULL,
   feed_contact_email  VARCHAR(255) NULL
 );
 
 CREATE TABLE stops
 (
   stop_id             VARCHAR(255) PRIMARY KEY,
-  stop_code           VARCHAR(255) NULL,
   stop_name           VARCHAR(255) NOT NULL,
-  stop_desc           VARCHAR(255) NULL,
-  stop_lat            double precision NOT NULL,
-  stop_lon            double precision NOT NULL,
+  stop_lat            FLOAT NOT NULL,
+  stop_lon            FLOAT NOT NULL,
   zone_id             VARCHAR(255) NULL,
   stop_url            VARCHAR(255) NULL,
-  location_type       boolean NULL,
+  location_type       INT NULL, --Enum
+  --Continue from here--
   parent_station      VARCHAR(255) NULL,
   wheelchair_boarding VARCHAR(255) NULL
 );
