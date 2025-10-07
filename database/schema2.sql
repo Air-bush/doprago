@@ -21,13 +21,12 @@ CREATE TABLE calendar (
 );
 
 CREATE TABLE calendar_dates (
-    service_id          ARCHAR(63) PRIMARY KEY REFERENCES calendar(service_id),
+    service_id          VARCHAR(63) PRIMARY KEY REFERENCES calendar(service_id),
     date                DATE NOT NULL,
     exception_type      SMALLINT NOT NULL CHECK (exception_type IN (1,2)),
 );
 
 CREATE TABLE feed_info (
-    feed_info_id        SERIAL PRIMARY KEY,
     feed_publisher_name VARCHAR(127) NOT NULL,
     feed_publisher_url  VARCHAR(255) NOT NULL,
     feed_lang           VARCHAR(31) NOT NULL,
@@ -38,27 +37,27 @@ CREATE TABLE feed_info (
 
 CREATE TABLE levels (
     level_id            VARCHAR(63) PRIMARY KEY,
-    level_index         INTEGER NOT NULL,
+    level_index         DOUBLE NOT NULL,
     level_name          VARCHAR(63)
 );
 
 CREATE TABLE stops (
     stop_id             VARCHAR(63) PRIMARY KEY,
-    stop_name           VARCHAR(127) NOT NULL,
+    stop_name           VARCHAR(127),
     stop_lat            DOUBLE PRECISION NOT NULL,
     stop_lon            DOUBLE PRECISION NOT NULL,
     zone_id             VARCHAR(31),
     stop_url            VARCHAR(255),
-    location_type       SMALLINT,
-    parent_station      VARCHAR(63) REFERENCES stops(stop_id) ON DELETE SET NULL,
-    wheelchair_boarding SMALLINT,
-    level_id            VARCHAR(63) REFERENCES levels(level_id) ON DELETE SET NULL,
+    location_type       SMALLINT CHECK (location_type IN (0,1,2,3,4)),
+    parent_station      VARCHAR(63) REFERENCES stops(stop_id),
+    wheelchair_boarding SMALLINT CHECK (wheelchair_boarding IN (0,1,2)),
+    level_id            VARCHAR(63) REFERENCES levels(level_id),
     platform_code       VARCHAR(31),
     asw_node_id         VARCHAR(63),
     asw_stop_id         VARCHAR(63),
     zone_region_type    VARCHAR(31)
 );
-
+--CONTINUE HERE---------------------------------------------------------------
 CREATE TABLE routes (
     route_id            VARCHAR(63) PRIMARY KEY,
     agency_id           VARCHAR(63) REFERENCES agency(agency_id) ON DELETE SET NULL,
