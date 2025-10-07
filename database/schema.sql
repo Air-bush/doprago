@@ -1,6 +1,6 @@
 DROP TABLE agency; -- IGNORE --
 DROP TABLE feed_info; --- IGNORE ---
-DROP TABLE stops;
+DROP TABLE stops; -- IGNORE --
 DROP TABLE routes;
 DROP TABLE calendar;
 DROP TABLE calendar_dates;
@@ -12,7 +12,7 @@ DROP TABLE transfers;
 
 CREATE TABLE agency
 (
-  agency_id         VARCHAR(255) UNIQUE NULL,
+  UNIQUE agency_id  VARCHAR(255) NULL,
   agency_name       VARCHAR(255) NOT NULL,
   agency_url        VARCHAR(255) NOT NULL,
   agency_timezone   VARCHAR(255) NOT NULL,
@@ -31,16 +31,20 @@ CREATE TABLE feed_info (
 
 CREATE TABLE stops
 (
-  stop_id             VARCHAR(255) PRIMARY KEY,
-  stop_name           VARCHAR(255) NOT NULL,
-  stop_lat            FLOAT NOT NULL,
-  stop_lon            FLOAT NOT NULL,
-  zone_id             VARCHAR(255) NULL,
-  stop_url            VARCHAR(255) NULL,
-  location_type       INT NULL, --Enum
-  --Continue from here--
-  parent_station      VARCHAR(255) NULL,
-  wheelchair_boarding VARCHAR(255) NULL
+  PRIMARY KEY stop_id         VARCHAR(255),
+  stop_name                   VARCHAR(255) NOT NULL,
+  stop_lat                    FLOAT NOT NULL,
+  stop_lon                    FLOAT NOT NULL,
+  zone_id                     VARCHAR(255) NULL,
+  stop_url                    VARCHAR(255) NULL,
+  location_type               INT NULL, --Enum
+  FOREIGN KEY parent_station  VARCHAR(255) NULL REFERENCES stops.stop_id,
+  wheelchair_boarding         INT NULL, --Enum
+  FOREIGN KEY level_id        VARCHAR(255) NULL REFERENCES levels.level_id
+  platform_code               VARCHAR(255) NULL,
+  asw_node_id                 VARCHAR(255) NULL, -- vvv Possible foreigns
+  asw_stop_id                 VARCHAR(255) NULL,
+  zone_region_id              INT NULL --Enum
 );
 
 CREATE TABLE routes
