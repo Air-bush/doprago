@@ -84,61 +84,51 @@ CREATE TABLE route_sub_agencies (
     sub_agency_id       VARCHAR(255) REFERENCES sub_agencies(sub_agency_id),
 );
 
---CONTINUE HERE---------------------------------------------------------
-
--- route stops: sequence per route + direction
 CREATE TABLE route_stops (
-    route_id            VARCHAR(63) REFERENCES routes(route_id) ON DELETE CASCADE,
-    direction_id        SMALLINT DEFAULT 0,
-    stop_id             VARCHAR(63) REFERENCES stops(stop_id) ON DELETE CASCADE,
-    stop_sequence       INTEGER NOT NULL,
-    PRIMARY KEY (route_id, direction_id, stop_sequence)
+    route_id            VARCHAR(255) REFERENCES routes(route_id),
+    direction_id        SMALLINT NOT NULL,
+    stop_id             VARCHAR(63) REFERENCES stops(stop_id),
+    stop_sequence       SMALLINT NOT NULL,
 );
 
 CREATE TABLE shapes (
-    shape_id            VARCHAR(63) PRIMARY KEY
-);
-
-CREATE TABLE shape_points (
-    shape_id            VARCHAR(63) REFERENCES shapes(shape_id) ON DELETE CASCADE,
-    shape_pt_sequence   INTEGER NOT NULL,
+    shape_id            VARCHAR(255) PRIMARY KEY,
     shape_pt_lat        DOUBLE PRECISION NOT NULL,
     shape_pt_lon        DOUBLE PRECISION NOT NULL,
-    shape_dist_traveled DOUBLE PRECISION,
-    PRIMARY KEY (shape_id, shape_pt_sequence)
+    shape_pt_sequence   SMALLINT NOT NULL CHECK (shape_pt_sequence >= 0),
+    shape_dist_traveled DOUBLE PRECISION CHECK (shape_dist_traveled >= 0)
 );
 
 CREATE TABLE trips (
-    trip_id             VARCHAR(63) PRIMARY KEY,
-    route_id            VARCHAR(63) REFERENCES routes(route_id) ON DELETE SET NULL,
-    service_id          VARCHAR(63) REFERENCES services(service_id) ON DELETE SET NULL,
-    trip_headsign       VARCHAR(127),
-    trip_short_name     VARCHAR(31),
-    direction_id        SMALLINT,
-    block_id            VARCHAR(63),
-    shape_id            VARCHAR(63) REFERENCES shapes(shape_id) ON DELETE SET NULL,
-    wheelchair_accessible SMALLINT,
-    bikes_allowed       SMALLINT,
+    trip_id             VARCHAR(255) PRIMARY KEY,
+    route_id            VARCHAR(255) REFERENCES routes(route_id),
+    service_id          VARCHAR(255) REFERENCES calendar(service_id),
+    trip_headsign       VARCHAR(255),
+    trip_short_name     VARCHAR(255),
+    direction_id        SMALLINT CHECK (direction_id IN (0,1)),
+    block_id            VARCHAR(255),
+    shape_id            VARCHAR(255) REFERENCES shapes(shape_id),
+    wheelchair_accessible SMALLINT CHECK (wheelchair_accessible IN (0,1,2)),
+    bikes_allowed       SMALLINT CHECK (bikes_allowed IN (0,1,2)),
     exceptional         BOOLEAN DEFAULT FALSE,
-    sub_agency_id       VARCHAR(63) REFERENCES sub_agencies(sub_agency_id) ON DELETE SET NULL
+    sub_agency_id       VARCHAR(255) REFERENCES sub_agencies(sub_agency_id)
 );
 
--- stop_times: arrival/departure in seconds from midnight (allows >24:00)
 CREATE TABLE stop_times (
-    trip_id             VARCHAR(63) REFERENCES trips(trip_id) ON DELETE CASCADE,
-    stop_sequence       INTEGER NOT NULL,
-    stop_id             VARCHAR(63) REFERENCES stops(stop_id) ON DELETE CASCADE,
-    arrival_time_secs   INTEGER CHECK (arrival_time_secs >= 0),
-    departure_time_secs INTEGER CHECK (departure_time_secs >= 0),
-    stop_headsign       VARCHAR(127),
-    pickup_type         SMALLINT,
-    drop_off_type       SMALLINT,
-    shape_dist_traveled DOUBLE PRECISION,
-    trip_operation_type SMALLINT,
-    bikes_allowed       SMALLINT,
-    PRIMARY KEY (trip_id, stop_sequence)
+    trip_id             VARCHAR(255) REFERENCES trips(trip_id),
+    arrival_time        INTERVAL, -- stored as interval to allow times > 24:00:00
+    departure_time      INTERVAL, -- stored as interval to allow times > 24:00:00
+    stop_id             VARCHAR(255) REFERENCES stops(stop_id),
+    stop_sequence       SMALLINT NOT NULL,
+    stop_headsign       VARCHAR(255),
+    pickup_type         SMALLINT CHECK (pickup_type IN (0,1,2,3)),
+    drop_off_type       SMALLINT CHECK (drop_off_type IN (0,1,2,3)),
+    shape_dist_traveled DOUBLE PRECISION CHECK (shape_dist_traveled >= 0),
+    trip_operation_type SMALLINT CHECK (trip_operation_type IN (1,7,8,9,10)),
+    bikes_allowed       SMALLINT CHECK (bikes_allowed IN (0,1,2,3,4,5)),
 );
 
+-- CONTINUE HERE -----------------------------------------------------------
 CREATE TABLE pathways (
     pathway_id          VARCHAR(63) PRIMARY KEY,
     from_stop_id        VARCHAR(63) REFERENCES stops(stop_id) ON DELETE CASCADE,
