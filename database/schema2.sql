@@ -1,14 +1,14 @@
 CREATE TABLE agency (
-    agency_id           VARCHAR(63) PRIMARY KEY,
-    agency_name         VARCHAR(127) NOT NULL,
+    agency_id           VARCHAR(255) PRIMARY KEY,
+    agency_name         VARCHAR(255) NOT NULL,
     agency_url          VARCHAR(255) NOT NULL,
-    agency_timezone     VARCHAR(31) NOT NULL,
-    agency_lang         VARCHAR(31),
-    agency_phone        VARCHAR(31)
+    agency_timezone     VARCHAR(255) NOT NULL,
+    agency_lang         VARCHAR(255),
+    agency_phone        VARCHAR(255)
 );
 
 CREATE TABLE calendar (
-    service_id          VARCHAR(63) PRIMARY KEY,
+    service_id          VARCHAR(255) PRIMARY KEY,
     monday              BOOLEAN NOT NULL,
     tuesday             BOOLEAN NOT NULL,
     wednesday           BOOLEAN NOT NULL,
@@ -21,72 +21,70 @@ CREATE TABLE calendar (
 );
 
 CREATE TABLE calendar_dates (
-    service_id          VARCHAR(63) PRIMARY KEY REFERENCES calendar(service_id),
+    service_id          VARCHAR(255) PRIMARY KEY REFERENCES calendar(service_id),
     date                DATE NOT NULL,
     exception_type      SMALLINT NOT NULL CHECK (exception_type IN (1,2)),
 );
 
 CREATE TABLE feed_info (
-    feed_publisher_name VARCHAR(127) NOT NULL,
+    feed_publisher_name VARCHAR(255) NOT NULL,
     feed_publisher_url  VARCHAR(255) NOT NULL,
-    feed_lang           VARCHAR(31) NOT NULL,
+    feed_lang           VARCHAR(255) NOT NULL,
     feed_start_date     DATE,
     feed_end_date       DATE,
     feed_contact_email  VARCHAR(255)
 );
 
 CREATE TABLE levels (
-    level_id            VARCHAR(63) PRIMARY KEY,
-    level_index         DOUBLE NOT NULL,
-    level_name          VARCHAR(63)
+    level_id            VARCHAR(255) PRIMARY KEY,
+    level_index         DOUBLE PRECISION NOT NULL,
+    level_name          VARCHAR(255)
 );
 
 CREATE TABLE stops (
-    stop_id             VARCHAR(63) PRIMARY KEY,
-    stop_name           VARCHAR(127),
+    stop_id             VARCHAR(255) PRIMARY KEY,
+    stop_name           VARCHAR(255),
     stop_lat            DOUBLE PRECISION NOT NULL,
     stop_lon            DOUBLE PRECISION NOT NULL,
-    zone_id             VARCHAR(31),
+    zone_id             VARCHAR(255),
     stop_url            VARCHAR(255),
     location_type       SMALLINT CHECK (location_type IN (0,1,2,3,4)),
-    parent_station      VARCHAR(63) REFERENCES stops(stop_id),
+    parent_station      VARCHAR(255) REFERENCES stops(stop_id),
     wheelchair_boarding SMALLINT CHECK (wheelchair_boarding IN (0,1,2)),
-    level_id            VARCHAR(63) REFERENCES levels(level_id),
-    platform_code       VARCHAR(31),
-    asw_node_id         VARCHAR(63),
-    asw_stop_id         VARCHAR(63),
-    zone_region_type    VARCHAR(31)
+    level_id            VARCHAR(255) REFERENCES levels(level_id),
+    platform_code       VARCHAR(255),
+    asw_node_id         VARCHAR(255),
+    asw_stop_id         VARCHAR(255),
+    zone_region_type    VARCHAR(255)
 );
---CONTINUE HERE---------------------------------------------------------------
+
 CREATE TABLE routes (
-    route_id            VARCHAR(63) PRIMARY KEY,
-    agency_id           VARCHAR(63) REFERENCES agency(agency_id) ON DELETE SET NULL,
-    route_short_name    VARCHAR(31),
-    route_long_name     VARCHAR(127),
-    route_type          SMALLINT NOT NULL,
+    route_id            VARCHAR(255) PRIMARY KEY,
+    agency_id           VARCHAR(255) REFERENCES agency(agency_id),
+    route_short_name    VARCHAR(255),
+    route_long_name     VARCHAR(255),
+    route_type          SMALLINT NOT NULL CHECK (route_type IN (0,1,2,3,4,5,6,7,11,12)),
     route_url           VARCHAR(255),
-    route_color         CHAR(31),     -- hex without '#'
-    route_text_color    CHAR(31),
+    route_color         CHAR(6),
+    route_text_color    CHAR(6),
     is_night            BOOLEAN DEFAULT FALSE,
     is_regional         BOOLEAN DEFAULT FALSE,
     is_substitute_transport BOOLEAN DEFAULT FALSE
 );
 
--- Sub-agency as an entity (so same sub_agency can be associated to many routes)
+-- Possiblility of merging sub_agencies into route_sub_agencies
 CREATE TABLE sub_agencies (
-    sub_agency_id       VARCHAR(63) PRIMARY KEY,
-    sub_agency_name     VARCHAR(127),
-    notes               VARCHAR(255)
+    sub_agency_id       VARCHAR(255) PRIMARY KEY,
+    sub_agency_name     VARCHAR(255),
 );
 
--- join table for routes <-> sub_agencies, with licence per route-sub
 CREATE TABLE route_sub_agencies (
-    id                  SERIAL PRIMARY KEY,
-    route_id            VARCHAR(63) REFERENCES routes(route_id) ON DELETE CASCADE,
-    sub_agency_id       VARCHAR(63) REFERENCES sub_agencies(sub_agency_id) ON DELETE CASCADE,
-    route_licence_number VARCHAR(63),
-    UNIQUE(route_id, sub_agency_id)
+    route_id            VARCHAR(255) REFERENCES routes(route_id),
+    route_licence_number SMALLINT,
+    sub_agency_id       VARCHAR(255) REFERENCES sub_agencies(sub_agency_id),
 );
+
+--CONTINUE HERE---------------------------------------------------------
 
 -- route stops: sequence per route + direction
 CREATE TABLE route_stops (
