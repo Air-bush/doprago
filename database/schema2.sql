@@ -128,73 +128,63 @@ CREATE TABLE stop_times (
     bikes_allowed       SMALLINT CHECK (bikes_allowed IN (0,1,2,3,4,5)),
 );
 
--- CONTINUE HERE -----------------------------------------------------------
 CREATE TABLE pathways (
-    pathway_id          VARCHAR(63) PRIMARY KEY,
-    from_stop_id        VARCHAR(63) REFERENCES stops(stop_id) ON DELETE CASCADE,
-    to_stop_id          VARCHAR(63) REFERENCES stops(stop_id) ON DELETE CASCADE,
-    pathway_mode        SMALLINT NOT NULL,
-    is_bidirectional    BOOLEAN DEFAULT FALSE,
-    traversal_time      INTEGER,
-    signposted_as       VARCHAR(63),
-    reversed_signposted_as VARCHAR(63),
+    pathway_id          VARCHAR(255) PRIMARY KEY,
+    from_stop_id        VARCHAR(255) REFERENCES stops(stop_id) NOT NULL,
+    to_stop_id          VARCHAR(255) REFERENCES stops(stop_id) NOT NULL,
+    pathway_mode        SMALLINT NOT NULL CHECK (pathway_mode IN (0,1,2,3,4,5,6)),
+    is_bidirectional    BOOLEAN NOT NULL,
+    traversal_time      INTEGER CHECK (traversal_time > 0),
+    signposted_as       VARCHAR(255),
+    reversed_signposted_as VARCHAR(255),
     bikes_prohibited    BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE transfers (
-    transfer_id         SERIAL PRIMARY KEY,
-    from_stop_id        VARCHAR(63) REFERENCES stops(stop_id) ON DELETE CASCADE,
-    to_stop_id          VARCHAR(63) REFERENCES stops(stop_id) ON DELETE CASCADE,
-    transfer_type       SMALLINT NOT NULL,
+    from_stop_id        VARCHAR(255) REFERENCES stops(stop_id),
+    to_stop_id          VARCHAR(63) REFERENCES stops(stop_id),
+    transfer_type       SMALLINT NOT NULL CHECK (transfer_type IN (0,1,2,3,4,5)),
     min_transfer_time   INTEGER,
-    from_trip_id        VARCHAR(63) REFERENCES trips(trip_id) ON DELETE SET NULL,
-    to_trip_id          VARCHAR(63) REFERENCES trips(trip_id) ON DELETE SET NULL,
+    from_trip_id        VARCHAR(63) REFERENCES trips(trip_id),
+    to_trip_id          VARCHAR(63) REFERENCES trips(trip_id),
     max_waiting_time    INTEGER,
-    UNIQUE (from_stop_id, to_stop_id, from_trip_id, to_trip_id)
 );
 
 CREATE TABLE fare_attributes (
-    fare_id             VARCHAR(63) PRIMARY KEY,
-    price               SMALLINT NOT NULL,
-    currency_type       VARCHAR(31) NOT NULL,
+    fare_id             VARCHAR(255) PRIMARY KEY,
+    price               DOUBLE PRECISION NOT NULL,
+    currency_type       VARCHAR(255) NOT NULL,
     payment_method      SMALLINT NOT NULL CHECK (payment_method IN (0,1)),
-    transfers           SMALLINT,
-    agency_id           VARCHAR(63) REFERENCES agency(agency_id) ON DELETE SET NULL,
-    transfer_duration   INTEGER
+    transfers           SMALLINT CHECK (transfers IN (0,1,2)),
+    agency_id           VARCHAR(255) REFERENCES agency(agency_id),
+    transfer_duration   INTEGER CHECK (transfer_duration >= 0)
 );
 
 CREATE TABLE fare_rules (
-    fare_rule_id        SERIAL PRIMARY KEY,
-    fare_id             VARCHAR(63) REFERENCES fare_attributes(fare_id) ON DELETE CASCADE,
-    contains_id         VARCHAR(63),   -- zone or contains identifier
-    route_id            VARCHAR(63) REFERENCES routes(route_id) ON DELETE SET NULL
+    fare_id             VARCHAR(255) REFERENCES fare_attributes(fare_id),
+    contains_id         VARCHAR(255) REFERENCES stops(zone_id),
+    route_id            VARCHAR(63) REFERENCES routes(route_id)
 );
 
 CREATE TABLE vehicle_categories (
-    vehicle_category_id VARCHAR(63) PRIMARY KEY
+    vehicle_category_id VARCHAR(255) PRIMARY KEY
 );
 
 CREATE TABLE vehicle_allocations (
-    id                  SERIAL PRIMARY KEY,
-    route_id            VARCHAR(63) REFERENCES routes(route_id) ON DELETE CASCADE,
-    vehicle_category_id VARCHAR(63) REFERENCES vehicle_categories(vehicle_category_id) ON DELETE CASCADE,
-    UNIQUE (route_id, vehicle_category_id)
+    route_id            VARCHAR(255) REFERENCES routes(route_id),
+    vehicle_category_id VARCHAR(255) REFERENCES vehicle_categories(vehicle_category_id),
 );
 
 CREATE TABLE vehicle_boardings (
-    id                  SERIAL PRIMARY KEY,
-    vehicle_category_id VARCHAR(63) REFERENCES vehicle_categories(vehicle_category_id) ON DELETE CASCADE,
+    vehicle_category_id VARCHAR(255) REFERENCES vehicle_categories(vehicle_category_id),
     child_sequence      INTEGER NOT NULL,
-    boarding_area_id    VARCHAR(63),
-    UNIQUE (vehicle_category_id, child_sequence)
+    boarding_area_id    VARCHAR(255),
 );
 
 CREATE TABLE vehicle_couplings (
-    id                  SERIAL PRIMARY KEY,
-    parent_id           VARCHAR(63) REFERENCES vehicle_categories(vehicle_category_id) ON DELETE CASCADE,
-    child_id            VARCHAR(63) REFERENCES vehicle_categories(vehicle_category_id) ON DELETE CASCADE,
-    child_sequence      INTEGER NOT NULL,
-    UNIQUE (parent_id, child_id, child_sequence)
+    parent_id           VARCHAR(255) REFERENCES vehicle_categories(vehicle_category_id),
+    child_id            VARCHAR(255) REFERENCES vehicle_categories(vehicle_category_id),
+    child_sequence      SMALLINT NOT NULL,
 );
 
 -- ======================
