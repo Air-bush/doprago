@@ -1,4 +1,14 @@
 import networkx
+import csv
 
 graph = networkx.Graph()
-graph.add_nodes_from([("U12345Z", {"name": "Praha hl.n."})])
+
+def get_nodes() -> list:
+    nodes = []
+    with open("gtfs_nodatabase_test/stops.txt", encoding="UTF-8") as file:
+        reader = csv.reader(file)
+        for line in reader:
+            print(line)
+            break
+
+get_nodes()
