@@ -5,6 +5,7 @@ UNDEFINED = -1
 class Stop:
     def __init__(self):
         self.location_type: int = 0
+        self.parent: Station
         self.gtfs_id: str
         self.id: str
         self.name: str
@@ -32,15 +33,16 @@ class Line:
         self.trips: list
 
 class Station:
-    def __init__(self):
+    def __init__(self, gtfs_id, node_id, cis, name, lat, lon, main_traffic):
         self.location_type: int = 1
-        self.gtfs_id: str
-        self.id: str
-        self.name: str
-        self.latitude: str
-        self.longitude: str
+        self.gtfs_id: str = gtfs_id
+        self.id: str = node_id
+        self.cis: int = cis
+        self.name: str = name
+        self.latitude: str = lat
+        self.longitude: str = lon
+        self.main_traffic_type: str = main_traffic
         self.zones: list
-        self.main_traffic_type: str
         self.lines: list
         self.stops: list
         self.transfers: dict # Key: (fromStop, toStop) Value: minTransferTime
