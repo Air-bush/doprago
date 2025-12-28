@@ -1,21 +1,23 @@
-TRUE = 1
-FALSE = 0
+POSSIBLE = 1
+NOT_POSSIBLE = 0
 UNDEFINED = -1
 
+
 class Stop:
-    def __init__(self):
+    def __init__(self, parent, gtfs_ids, node_id, altName, lat, lon, zones, platform, main_traffic):
         self.location_type: int = 0
-        self.parent: Station
-        self.gtfs_id: str
-        self.id: str
-        self.name: str
-        self.latitude: str
-        self.longitude: str
-        self.zones: list[str]
+        self.parent: Station = parent
+        self.gtfs_ids: list[str] = gtfs_ids
+        self.id: str = node_id
+        self.altName: str = altName
+        self.latitude: str = lat
+        self.longitude: str = lon
+        self.zones: list[str] = zones
         self.wheelchair_boarding: int = UNDEFINED
-        self.platform_code: str
-        self.main_traffic_type: str
-        self.lines: dict # key: Line, val: Line direction indexes stopping at this stations
+        self.platform_code: str = platform
+        self.main_traffic_type: str = main_traffic
+        self.lines: dict  # key: Line, val: Line direction indexes stopping at this stations
+
 
 class Line:
     def __init__(self):
@@ -32,11 +34,12 @@ class Line:
         self.stops: dict # key: direction_id, val: list of stops per direction
         self.trips: list
 
+
 class Station:
     def __init__(self, gtfs_id, node_id, cis, name, lat, lon, main_traffic):
         self.location_type: int = 1
         self.gtfs_id: str = gtfs_id
-        self.id: str = node_id
+        self.id: int = node_id
         self.cis: int = cis
         self.name: str = name
         self.latitude: str = lat
@@ -46,6 +49,7 @@ class Station:
         self.lines: list
         self.stops: list
         self.transfers: dict # Key: (fromStop, toStop) Value: minTransferTime
+
 
 class Trip:
     def __init__(self):
@@ -57,4 +61,4 @@ class Trip:
         self.wheelchair_accessible: int = UNDEFINED
         self.bikes_allowed: int = UNDEFINED
         self.exceptional: bool
-        self.stop_times: dict # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
+        self.stop_times: dict  # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
