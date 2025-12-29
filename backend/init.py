@@ -1,9 +1,11 @@
 from structs import *
 import requests
 
+GTFS_LOCATION = "tempFiles/"
+
 
 def init_stations() -> dict:  # node:object / list
-    all_stations = {}
+    all_stations = {}  # key: node_id, value: Station
     response = requests.get("https://data.pid.cz/stops/json/stops.json")
     raw_stations = response.json()["stopGroups"]
     for raw_station in raw_stations:
@@ -51,5 +53,30 @@ def init_stop(stop_data: dict, parent_station: Station) -> Stop:
     return stop
 
 
+def init_lines() -> list:  # TODO: Temporary return type
+    all_routes = []
+    with open(GTFS_LOCATION + "routes.txt", encoding="UTF-8") as file:
+        file.readline()
+        routes_data = file.read().split("\n")
+    for route_data in routes_data:
+        route_data = route_data.split(",")
+        route_id = route_data[0]
+        short_name = route_data[2] if route_data[2] else None
+        long_name = route_data[3] if route_data[3] else None
+        route_type = int(routes_data[4])
+        color = route_data[6]
+        text_color = route_data[7]
+        is_night = bool(int(route_data[8]))
+        is_regional = bool(int(route_data[9]))
+        is_substitute = bool(int(route_data[10]))
+        route = Line(route_id, short_name, long_name, route_type, color,
+                     text_color, is_night, is_regional, is_substitute)
+        directions: dict  # key: direction_id, val: head_sign/last_stop  # TODO: Implement
+        stops: dict  # key: direction_id, val: list of stops per direction  # TODO: Implement
+        trips: dict  # key: direction_id, val: list of trips per direction  # TODO: Implement
+        all_routes.append(route)
+
+
 if __name__ == "__main__":
-    stations = init_stations()
+    # stations = init_stations()
+    pass

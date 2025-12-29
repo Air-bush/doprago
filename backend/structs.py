@@ -20,19 +20,27 @@ class Stop:
 
 
 class Line:
-    def __init__(self):
-        self.id: str
-        self.short_name: str
-        self.long_name: str
-        self.type: str
-        self.color: str
-        self.text_color: str
-        self.is_night: bool
-        self.is_regional: bool
-        self.is_substitute: bool
-        self.directions: dict # key: direction_id, val: head_sign/last_stop
-        self.stops: dict # key: direction_id, val: list of stops per direction
-        self.trips: list
+    TRAM = 0
+    METRO = 1
+    RAIL = 2
+    BUS = 3
+    FERRY = 4
+    FUNICULAR = 7
+    TROLLEYBUS = 11
+
+    def __init__(self, gtfs_id, s_name, l_name, traffic_type, color, text_color, is_night, is_reg, is_sub):
+        self.id: str = gtfs_id
+        self.short_name: str = s_name
+        self.long_name: str = l_name
+        self.type: int = traffic_type
+        self.color: str = color
+        self.text_color: str = text_color
+        self.is_night: bool = is_night
+        self.is_regional: bool = is_reg
+        self.is_substitute: bool = is_sub
+        self.directions: dict  # key: direction_id, val: head_sign/last_stop
+        self.stops: dict  # key: direction_id, val: list of stops per direction
+        self.trips: dict  # key: direction_id, val: list of trips per direction
 
 
 class Station:
@@ -48,7 +56,7 @@ class Station:
         self.zones: list
         self.lines: list
         self.stops: list
-        self.transfers: dict # Key: (fromStop, toStop) Value: minTransferTime
+        self.transfers: dict  # Key: (fromStop, toStop) Value: minTransferTime
 
 
 class Trip:
