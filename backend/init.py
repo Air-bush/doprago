@@ -49,11 +49,12 @@ def init_stop(stop_data: dict, parent_station: Station) -> Stop:
         stop.wheelchair_boarding = POSSIBLE
     elif wheelchair == "notPossible":
         stop.wheelchair_boarding = NOT_POSSIBLE
-    lines: dict  # key: Line, val: Line direction indexes stopping at this stations TODO: implement
+    stop_lines: dict  # key: Line, val: Line direction indexes stopping at this stations TODO: implement
     return stop
 
 
 def init_lines() -> list:  # TODO: Temporary return type
+    # TODO: Convert to csv reader -> whole file reading is broken (, and " shenanigans)
     all_routes = []
     with open(GTFS_LOCATION + "routes.txt", encoding="UTF-8") as file:
         file.readline()
@@ -63,7 +64,8 @@ def init_lines() -> list:  # TODO: Temporary return type
         route_id = route_data[0]
         short_name = route_data[2] if route_data[2] else None
         long_name = route_data[3] if route_data[3] else None
-        route_type = int(routes_data[4])
+        print(route_data)
+        route_type = int(route_data[4])
         color = route_data[6]
         text_color = route_data[7]
         is_night = bool(int(route_data[8]))
@@ -75,8 +77,10 @@ def init_lines() -> list:  # TODO: Temporary return type
         stops: dict  # key: direction_id, val: list of stops per direction  # TODO: Implement
         trips: dict  # key: direction_id, val: list of trips per direction  # TODO: Implement
         all_routes.append(route)
+    return all_routes
 
 
 if __name__ == "__main__":
     # stations = init_stations()
+    lines = init_lines()
     pass
