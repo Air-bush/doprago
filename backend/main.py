@@ -6,7 +6,7 @@ graph = networkx.MultiDiGraph()
 
 def get_stops() -> list:
     all_stops = []
-    with open("gtfs_nodatabase_test/stops.txt", encoding="UTF-8") as file:
+    with open("tempFiles/stops.txt", encoding="UTF-8") as file:
         reader = csv.DictReader(file)
         for line in reader:
             stop_id = line["stop_id"]

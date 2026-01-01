@@ -1,11 +1,13 @@
+import csv
+
 from structs import *
 import requests
 
 GTFS_LOCATION = "tempFiles/"
 
 
-def init_stations() -> dict:  # node:object / list
-    all_stations = {}  # key: node_id, value: Station
+def init_stations() -> dict[int,list[Station]]:  # node:object/list
+    all_stations = {}  # key: node_id, value: Station !!!! VALUE MIGHT BE A LIST (IN CASE MULTIPLE STATIONS PER NODE)
     response = requests.get("https://data.pid.cz/stops/json/stops.json")
     raw_stations = response.json()["stopGroups"]
     for raw_station in raw_stations:
@@ -29,7 +31,10 @@ def init_stations() -> dict:  # node:object / list
                     station_zones.append(zone)
         station.zones = station_zones
         transfers: dict  # Key: (fromStop, toStop) Value: minTransferTime TODO: Implement
-        all_stations[node_id] = station
+        if all_stations.get(node_id, None) is not None:
+            all_stations[node_id].append(station)
+        else:
+            all_stations[node_id] = [station]
     return all_stations
 
 
@@ -53,34 +58,58 @@ def init_stop(stop_data: dict, parent_station: Station) -> Stop:
     return stop
 
 
-def init_lines() -> list:  # TODO: Temporary return type
-    # TODO: Convert to csv reader -> whole file reading is broken (, and " shenanigans)
-    all_routes = []
-    with open(GTFS_LOCATION + "routes.txt", encoding="UTF-8") as file:
-        file.readline()
-        routes_data = file.read().split("\n")
+def init_lines(all_stations) -> dict[str,Line]:
+    all_routes = {}  # key: route_id, val: Line
+    with open(GTFS_LOCATION + "routes.txt", encoding="UTF-8") as routes_file:
+        routes_reader = csv.DictReader(routes_file, delimiter=",")
+        routes_data = list(routes_reader)
     for route_data in routes_data:
-        route_data = route_data.split(",")
-        route_id = route_data[0]
-        short_name = route_data[2] if route_data[2] else None
-        long_name = route_data[3] if route_data[3] else None
-        print(route_data)
-        route_type = int(route_data[4])
-        color = route_data[6]
-        text_color = route_data[7]
-        is_night = bool(int(route_data[8]))
-        is_regional = bool(int(route_data[9]))
-        is_substitute = bool(int(route_data[10]))
+        route_id = route_data["route_id"]
+        short_name = route_data.get("route_short_name", None)
+        long_name = route_data.get("route_long_name", None)
+        route_type = int(route_data["route_type"])
+        color = route_data["route_color"]
+        text_color = route_data["route_text_color"]
+        is_night = bool(int(route_data["is_night"]))
+        is_regional = bool(int(route_data["is_regional"]))
+        is_substitute = bool(int(route_data["is_substitute_transport"]))
         route = Line(route_id, short_name, long_name, route_type, color,
                      text_color, is_night, is_regional, is_substitute)
-        directions: dict  # key: direction_id, val: head_sign/last_stop  # TODO: Implement
-        stops: dict  # key: direction_id, val: list of stops per direction  # TODO: Implement
+        directions: dict  # key: direction_id, val: head_sign/last_stop  # TODO: Implement -> May not be possible due to variable route length
         trips: dict  # key: direction_id, val: list of trips per direction  # TODO: Implement
-        all_routes.append(route)
+        all_routes[route_id] = route
+
+    with open(GTFS_LOCATION + "route_stops.txt", encoding="UTF-8") as sequence_file:  # Line.stops -> Sequence == index + 1
+        sequence_reader = csv.DictReader(sequence_file, delimiter=",")
+        sequence_data = list(sequence_reader)
+    current_route = sequence_data[0]["route_id"]
+    current_sequence = {}
+    for stop_line in sequence_data:
+        if current_route != stop_line["route_id"]:
+            all_routes[current_route].stops = current_sequence
+            current_sequence = {}
+            current_route = stop_line["route_id"]
+        if current_sequence.get(stop_line["direction_id"], None) is None:
+            current_sequence[stop_line["direction_id"]] = []
+        for station in all_stations[int(stop_line["stop_id"][1:].split("Z")[0])]:
+            for stop in station.stops:
+                if stop_line["stop_id"] in stop.gtfs_ids:
+                    current_sequence[stop_line["direction_id"]].append(stop)
+
     return all_routes
 
 
 if __name__ == "__main__":
-    # stations = init_stations()
-    lines = init_lines()
-    pass
+    stations = init_stations()
+    lines = init_lines(stations)
+
+    #for s in stations[2704]:
+    #    print(s.to_string())
+
+    #print(lines["L993"].short_name + " -> " + lines["L993"].long_name)
+
+    #for d in lines["L993"].stops:
+    #    print(d + ": ", end="")
+    #    for s in lines["L993"].stops[d]:
+    #        print(s.alternative_name, end=", ")
+    #    print()

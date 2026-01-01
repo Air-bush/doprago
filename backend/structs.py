@@ -4,12 +4,12 @@ UNDEFINED = -1
 
 
 class Stop:
-    def __init__(self, parent, gtfs_ids, node_id, altName, lat, lon, zones, platform, main_traffic):
+    def __init__(self, parent, gtfs_ids, node_id, alt_name, lat, lon, zones, platform, main_traffic):
         self.location_type: int = 0
         self.parent: Station = parent
         self.gtfs_ids: list[str] = gtfs_ids
         self.id: str = node_id
-        self.altName: str = altName
+        self.alternative_name: str = alt_name
         self.latitude: str = lat
         self.longitude: str = lon
         self.zones: list[str] = zones
@@ -18,6 +18,8 @@ class Stop:
         self.main_traffic_type: str = main_traffic
         self.lines: dict  # key: Line, val: Line direction indexes stopping at this stations
 
+    def to_string(self) -> str:
+        return f"{self.id} ({self.alternative_name}) - {self.platform_code} -> {self.main_traffic_type} ({",".join(self.zones)})"
 
 class Line:
     TRAM = 0
@@ -39,7 +41,7 @@ class Line:
         self.is_regional: bool = is_reg
         self.is_substitute: bool = is_sub
         self.directions: dict  # key: direction_id, val: head_sign/last_stop
-        self.stops: dict  # key: direction_id, val: list of stops per direction
+        self.stops: dict = {}  # key: direction_id, val: list of stops per direction
         self.trips: dict  # key: direction_id, val: list of trips per direction
 
 
@@ -53,10 +55,17 @@ class Station:
         self.latitude: str = lat
         self.longitude: str = lon
         self.main_traffic_type: str = main_traffic
-        self.zones: list
+        self.zones: list = []
         self.lines: list
-        self.stops: list
+        self.stops: list = []
         self.transfers: dict  # Key: (fromStop, toStop) Value: minTransferTime
+
+    def to_string(self) -> str:
+        station_string = f"{self.id} ({self.name}) -> {self.main_traffic_type}; Zones: {",".join(self.zones)}\n"
+        stops_string = ""
+        for stop in self.stops:
+            stops_string += f"\t{stop.to_string()}\n"
+        return station_string + stops_string
 
 
 class Trip:
