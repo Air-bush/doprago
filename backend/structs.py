@@ -16,7 +16,7 @@ class Stop:
         self.wheelchair_boarding: int = UNDEFINED
         self.platform_code: str = platform
         self.main_traffic_type: str = main_traffic
-        self.lines: dict  # key: Line, val: Line direction indexes stopping at this stations
+        self.lines: dict = {}  # key: Line, val: Line direction indexes stopping at this station/->list of terminus stations<-
 
     def to_string(self) -> str:
         return f"{self.id} ({self.alternative_name}) - {self.platform_code} -> {self.main_traffic_type} ({",".join(self.zones)})"
@@ -40,7 +40,7 @@ class Line:
         self.is_night: bool = is_night
         self.is_regional: bool = is_reg
         self.is_substitute: bool = is_sub
-        self.directions: dict  # key: direction_id, val: head_sign/last_stop
+        self.directions: list = []  # key: direction_id, val: head_sign/last_stop TODO: For now just list of terminus stations
         self.stops: dict = {}  # key: direction_id, val: list of stops per direction
         self.trips: dict  # key: direction_id, val: list of trips per direction
 
@@ -56,7 +56,7 @@ class Station:
         self.longitude: str = lon
         self.main_traffic_type: str = main_traffic
         self.zones: list = []
-        self.lines: list
+        self.lines: list = []
         self.stops: list = []
         self.transfers: dict  # Key: (fromStop, toStop) Value: minTransferTime
 
