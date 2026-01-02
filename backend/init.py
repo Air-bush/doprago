@@ -6,6 +6,7 @@ import requests
 GTFS_LOCATION = "tempFiles/"
 raw_stations = requests.get("https://data.pid.cz/stops/json/stops.json").json()["stopGroups"]
 
+
 def init_stations(all_lines) -> dict[int,list[Station]]:  # node:object/list
     all_stations = {}  # key: node_id, value: Station !!!! VALUE MIGHT BE A LIST (IN CASE MULTIPLE STATIONS PER NODE)
     for raw_station in raw_stations:
@@ -27,7 +28,7 @@ def init_stations(all_lines) -> dict[int,list[Station]]:  # node:object/list
             for zone in stop.zones:
                 if zone not in station_zones:
                     station_zones.append(zone)
-            for line in stop.lines.keys():
+            for line in stop.lines.keys():  # TODO: Maybe change station lines to dict (key: plat code, val:lines)
                 if line not in station_lines:
                     station_lines.append(line)
         station.zones = station_zones
@@ -56,24 +57,11 @@ def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
         stop.wheelchair_boarding = POSSIBLE
     elif wheelchair == "notPossible":
         stop.wheelchair_boarding = NOT_POSSIBLE
-    stop_lines = {}  # key: Line, val: Line direction indexes stopping at this stations/end stations TODO: implement
+    stop_lines = {}  # key: Line, val: Line direction indexes stopping at this station/end stations_name
     for line_data in stop_data["lines"]:
         line = all_lines[f"L{line_data["id"]}"]
         direction = line_data["direction"]
         direction2 = line_data.get("direction2", None)
-        terminus = None
-        terminus2 = None
-        for raw_station in raw_stations:  # TODO: TEST AND FINISH -> FIX FIX FIX
-            if raw_station["name"] == direction:
-                terminus = raw_station["node"]
-                if direction2 is None or terminus2 is not None:
-                    break
-            if direction2 is None:
-                continue
-            if raw_station["name"] == direction2:
-                terminus2 = raw_station["node"]
-                if terminus is not None:
-                    break
         stop_lines[line] = [direction]
         if direction not in line.directions:
             line.directions.append(direction)
@@ -84,6 +72,7 @@ def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
             line.directions.append(direction2)
     stop.lines = stop_lines
     return stop
+
 
 def init_lines() -> dict[str,Line]:
     all_routes = {}  # key: route_id, val: Line
@@ -105,7 +94,7 @@ def init_lines() -> dict[str,Line]:
         trips: dict  # key: direction_id, val: list of trips per direction  # TODO: Implement
         all_routes[route_id] = route
     return all_routes
-
+#TODO: ADD DICT OF ALL STOPS -> EASIER SEARCH (KEY: ID, VAL: STOP)
 
 def init_line_stations(all_routes: dict, all_stations: dict):
     with open(GTFS_LOCATION + "route_stops.txt", encoding="UTF-8") as sequence_file:  # Line.stops -> Sequence == index + 1
@@ -120,16 +109,12 @@ def init_line_stations(all_routes: dict, all_stations: dict):
             current_route = stop_line["route_id"]
         if current_sequence.get(stop_line["direction_id"], None) is None:
             current_sequence[stop_line["direction_id"]] = []
-        for station in all_stations[int(stop_line["stop_id"][1:].split("Z")[0])]:
+        for station in all_stations[int(stop_line["stop_id"][1:].split("Z")[0])]:  # TODO: Fix for multiple stations pro node
+            print(all_stations[1040])
             for stop in station.stops:
                 if stop_line["stop_id"] in stop.gtfs_ids:
                     current_sequence[stop_line["direction_id"]].append(stop)
 
-def find_station_by_name(name, all_stations) -> Station|None:
-    for node in all_stations.values():
-        for station in node:
-            if station.name == name:
-                return station
 
 def init_structures():
     all_lines = init_lines()
@@ -145,6 +130,7 @@ if __name__ == "__main__":
         for ss in s.stops:
             for l in ss.lines:
                 print(l.short_name)
+                print(ss.lines[l])
     #    for l in s.lines:
     #        print(f"{l.short_name}")
     #    print(s.to_string())
