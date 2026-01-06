@@ -33,7 +33,7 @@ def init_stations(all_lines) -> dict[int,list[Station]]:  # node:object/list
             for zone in stop.zones:
                 if zone not in station_zones:
                     station_zones.append(zone)
-            for line in stop.lines.keys():  # TODO: Maybe change station lines to dict (key: plat code, val:lines)
+            for line in stop.lines.keys():  # Maybe change station lines to dict (key: plat code, val:lines)
                 if line not in station_lines:
                     station_lines.append(line)
         station.zones = station_zones
@@ -71,16 +71,28 @@ def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
         line = all_lines[f"L{line_data["id"]}"]
         direction = line_data["direction"]  # TODO: Dont search all stations -> search only in line.stops
         direction2 = line_data.get("direction2", None)
+
+        #terminus_station1, terminus_station2 = None, None  TODO: Unable to find terminus station Objects -> Line.stops not yet initialised
+        #for line_stop in line.stops["1"]:
+        #    if line_stop.parent.name == direction:
+        #        terminus_station1 = line_stop.parent
+        #    if direction2 and line_stop.parent.name == direction:
+        #        terminus_station2 = line_stop.parent
+        #if terminus_station1 is None:
+        #    print(direction)
+        #    raise Exception
+
         stop_lines[line] = [direction]
         if direction not in line.directions:
             line.directions.append(direction)
+
         if not direction2:
             continue
         stop_lines[line].append(direction2)
         if direction2 not in line.directions:
             line.directions.append(direction2)
-    stop.lines = stop_lines
 
+    stop.lines = stop_lines
     return stop
 
 
