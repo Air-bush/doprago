@@ -7,7 +7,7 @@ GTFS_LOCATION = "tempFiles/"
 raw_stations = requests.get("https://data.pid.cz/stops/json/stops.json").json()["stopGroups"]
 
 
-def init_stations(all_lines) -> dict[int,list[Station]]:  # node:object/list
+def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
     all_stops = {}  # key: node_id, value: Stop
     all_stations = {}  # key: node_id, value: Station !!!! VALUE MIGHT BE A LIST (IN CASE MULTIPLE STATIONS PER NODE)
     for raw_station in raw_stations:
@@ -20,16 +20,16 @@ def init_stations(all_lines) -> dict[int,list[Station]]:  # node:object/list
         main_traffic_type = raw_station["mainTrafficType"]
         station = Station(gtfs_id, node_id, cis, name, latitude, longitude, main_traffic_type)
 
-        stops: list[Stop] = []
+        stops: dict[int, Stop] = {}
         for raw_stop in raw_station["stops"]:
             stop = init_stop(raw_stop, station, all_lines)
-            stops.append(stop)
+            stops[int(stop.id.split("/")[1])] = stop
             all_stops[stop.id] = stop
         station.stops = stops
 
         station_zones = []  # list of station zones
         station_lines = []  # list[Lines]
-        for stop in stops:
+        for stop in stops.values():
             for zone in stop.zones:
                 if zone not in station_zones:
                     station_zones.append(zone)
@@ -45,7 +45,7 @@ def init_stations(all_lines) -> dict[int,list[Station]]:  # node:object/list
             all_stations[node_id].append(station)
         else:
             all_stations[node_id] = [station]
-    return all_stations
+    return all_stations, all_stops
 
 
 def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
@@ -69,7 +69,7 @@ def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
     stop_lines = {}  # key: Line, val: Line direction indexes stopping at this station/end stations_name
     for line_data in stop_data["lines"]:
         line = all_lines[f"L{line_data["id"]}"]
-        direction = line_data["direction"]  # TODO: Dont search all stations -> search only in line.stops
+        direction = line_data["direction"]
         direction2 = line_data.get("direction2", None)
 
         #terminus_station1, terminus_station2 = None, None  TODO: Unable to find terminus station Objects -> Line.stops not yet initialised
@@ -119,7 +119,7 @@ def init_lines() -> dict[str,Line]:
 
         all_routes[route_id] = route
     return all_routes
-#TODO: ADD DICT OF ALL STOPS -> EASIER SEARCH (KEY: ID, VAL: STOP)
+
 
 def init_line_stations(all_routes: dict, all_stations: dict):
     with open(GTFS_LOCATION + "route_stops.txt", encoding="UTF-8") as sequence_file:  # Line.stops -> Sequence == index + 1
@@ -136,24 +136,61 @@ def init_line_stations(all_routes: dict, all_stations: dict):
         if current_sequence.get(stop_line["direction_id"], None) is None:
             current_sequence[stop_line["direction_id"]] = []
         for station in all_stations[int(stop_line["stop_id"][1:].split("Z")[0])]:  # Fix for multiple stations pro node - Uz ne jsem jen debil
-            for stop in station.stops:
+            for stop in station.stops.values():
                 if stop_line["stop_id"] in stop.gtfs_ids:
                     current_sequence[stop_line["direction_id"]].append(stop)
 
 
+def init_service_ids() -> dict:
+    all_service_days = {}  # Key: ServiceId, Val: ServiceCalendar
+    with open(GTFS_LOCATION + "calendar.txt", encoding="UTF-8") as calendar_file:
+        calendar_reader = csv.DictReader(calendar_file, delimiter=",")
+        calendar_data = list(calendar_reader)
+
+    for service in calendar_data:
+        service_id = service["service_id"]
+        start_date = service["start_date"]
+        end_date = service["end_date"]
+        all_service_days[service_id] = ServiceCalender(service_id, start_date, end_date)
+
+    with open(GTFS_LOCATION + "calendar_dates.txt", encoding="UTF-8") as exceptions_file:
+        exceptions_reader = csv.DictReader(exceptions_file, delimiter=",")
+        exceptions_data = list(exceptions_reader)
+
+    for service_exception in exceptions_data:
+        all_service_days[service_exception["service_id"]].exceptions[service_exception["date"]] = int(service_exception["exception_type"])
+
+    return all_service_days
+
+
 def init_trips():
-    pass # stops: list[dict[stop, arr, dep...]]
+    pass
+    # stops: list[dict[stop, arr, dep...]]
+
+    #self.id: str
+    #self.service_id: str
+    #self.route_id: str
+    #self.direction_id: int
+    #self.headsign: str
+    #self.wheelchair_accessible: int = UNDEFINED
+    #self.bikes_allowed: int = UNDEFINED
+    #self.exceptional: bool
+    #self.stop_times: dict  # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
 
 
 def init_structures():
+    all_services = init_service_ids()
     all_lines = init_lines()
-    all_stations = init_stations(all_lines)
+    all_stations, all_stops = init_stations(all_lines)
     init_line_stations(all_lines, all_stations)
-    return all_stations, all_lines
+    return all_stations, all_stops, all_lines, all_services
 
 
 if __name__ == "__main__":
-    stations, lines = init_structures()
+    stations, stops, lines, service_ids = init_structures()
+
+    for s in stations[1071]:
+        print(s.to_string())
 
     #for s in stations[1029]:
     #    for ss in s.stops:

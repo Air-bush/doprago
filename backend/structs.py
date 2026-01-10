@@ -42,7 +42,7 @@ class Line:
         self.is_substitute: bool = is_sub
         self.directions: list = []  # key: direction_id, val: head_sign/last_stop TODO: For now just list of terminus stations
         self.stops: dict = {}  # key: direction_id, val: list of stops per direction
-        self.trips: dict  # key: direction_id, val: list of trips per direction
+        self.trips: dict = {}  # key: direction_id, val: list of trips per direction
 
 
 class Station:
@@ -57,13 +57,13 @@ class Station:
         self.main_traffic_type: str = main_traffic
         self.zones: list = []
         self.lines: list = []
-        self.stops: list = []
+        self.stops: dict = {}  # Key: /id Val: Stop
         self.transfers: dict  # Key: (fromStop, toStop) Value: minTransferTime
 
     def to_string(self) -> str:
         station_string = f"{self.id} ({self.name}) -> {self.main_traffic_type}; Zones: {",".join(self.zones)}\n"
         stops_string = ""
-        for stop in self.stops:
+        for stop in self.stops.values():
             stops_string += f"\t{stop.to_string()}\n"
         return station_string + stops_string
 
@@ -79,3 +79,23 @@ class Trip:
         self.bikes_allowed: int = UNDEFINED
         self.exceptional: bool
         self.stop_times: dict  # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
+
+
+class ServiceCalender:
+    ADDED = 1
+    REMOVED = 2
+    def __init__(self, service_id, start, end):
+        self.service_id: str = service_id  # 1st 7 digits => weekdays of operation
+        self.mon: bool = True if self.service_id[0] == "1" else False
+        self.tue: bool = True if self.service_id[1] == "1" else False
+        self.wed: bool = True if self.service_id[2] == "1" else False
+        self.thu: bool = True if self.service_id[3] == "1" else False
+        self.fri: bool = True if self.service_id[4] == "1" else False
+        self.sat: bool = True if self.service_id[5] == "1" else False
+        self.sun: bool = True if self.service_id[6] == "1" else False
+        self.start_date: str = start  # Year-4Dig Month-2Dig Day-2Dig
+        self.end_date: str = end
+        self.exceptions: dict[str, int] = {}  # Key: exception date, Val: 1/2 (service added/service removed)
+
+# Trips -> sorted by direction ids and then by dates for easier access -> dict { direction_id: { mon:[], tue:[]}
+# Implement searching algorithm of halfing previous list part for faster services_now finding -> LIST MUST BE SORTED BY DEPARTURE TIME
