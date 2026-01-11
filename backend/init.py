@@ -142,7 +142,7 @@ def init_line_stations(all_routes: dict, all_stations: dict):
 
 
 def init_service_ids() -> dict:
-    all_service_days = {}  # Key: ServiceId, Val: ServiceCalendar
+    all_service_days = {}  # Key: ServiceId, Val: ServiceSchedule
     with open(GTFS_LOCATION + "calendar.txt", encoding="UTF-8") as calendar_file:
         calendar_reader = csv.DictReader(calendar_file, delimiter=",")
         calendar_data = list(calendar_reader)
@@ -151,7 +151,7 @@ def init_service_ids() -> dict:
         service_id = service["service_id"]
         start_date = service["start_date"]
         end_date = service["end_date"]
-        all_service_days[service_id] = ServiceCalender(service_id, start_date, end_date)
+        all_service_days[service_id] = ServiceSchedule(service_id, start_date, end_date)
 
     with open(GTFS_LOCATION + "calendar_dates.txt", encoding="UTF-8") as exceptions_file:
         exceptions_reader = csv.DictReader(exceptions_file, delimiter=",")
@@ -163,27 +163,35 @@ def init_service_ids() -> dict:
     return all_service_days
 
 
-def init_trips():
-    pass
+def init_trips(all_lines, all_service_ids):
+    all_trips = {}
+    with open(GTFS_LOCATION + "trips.txt", encoding="UTF-8") as trip_file:
+        trip_reader = csv.DictReader(trip_file, delimiter=",")
+        trip_data = list(trip_reader)
+
+    for raw_trip in trip_data:
+        trip_id = raw_trip["trip_id"]
+        parent = all_lines[raw_trip["route_id"]]
+        service_schedule = all_service_ids[raw_trip["service_id"]]
+        headsign = raw_trip["trip_headsign"]
+        direction_id = raw_trip["direction_id"]
+
     # stops: list[dict[stop, arr, dep...]]
 
-    #self.id: str
-    #self.service_id: str
-    #self.route_id: str
-    #self.direction_id: int
-    #self.headsign: str
     #self.wheelchair_accessible: int = UNDEFINED
     #self.bikes_allowed: int = UNDEFINED
     #self.exceptional: bool
     #self.stop_times: dict  # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
+    #self.icons_stop: list[str]
+    #self.icons_line: list[str]
 
 
 def init_structures():
-    all_services = init_service_ids()
+    all_service_ids = init_service_ids()
     all_lines = init_lines()
     all_stations, all_stops = init_stations(all_lines)
     init_line_stations(all_lines, all_stations)
-    return all_stations, all_stops, all_lines, all_services
+    return all_stations, all_stops, all_lines, all_service_ids
 
 
 if __name__ == "__main__":

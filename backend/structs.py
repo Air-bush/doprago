@@ -69,19 +69,34 @@ class Station:
 
 
 class Trip:
+    METRO_A = "Ma"
+    METRO_B = "Mb"
+    METRO_C = "Mc"
+    METRO_D = "Md"
+    TRAIN = "Ra"
+    ESKO = "Sb"
+    FUNICULAR = "Fu"
+    BOAT = "Fe"
+    AIRPLANE = "Ap"
+    TRAM = "Tw"
+    TROLLEY_BUS = "Tb"
+    BUS = "Bu"
+
     def __init__(self):
         self.id: str
-        self.service_id: str
-        self.route_id: str
+        self.service: ServiceSchedule
+        self.parent_line: Line
         self.direction_id: int
         self.headsign: str
         self.wheelchair_accessible: int = UNDEFINED
         self.bikes_allowed: int = UNDEFINED
-        self.exceptional: bool
+        self.exceptional: bool = False
         self.stop_times: dict  # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
+        self.icons_stop: list[str]
+        self.icons_line: list[str]
 
 
-class ServiceCalender:
+class ServiceSchedule:
     ADDED = 1
     REMOVED = 2
     def __init__(self, service_id, start, end):
