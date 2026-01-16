@@ -164,26 +164,35 @@ def init_service_ids() -> dict:
 
 
 def init_trips(all_lines, all_service_ids):
-    all_trips = {}
+    trips_list = {} # Key: trip_id; Val: Trip => only temporary before line sorting
+    all_trips = {}  # Key: Line { Key: direction_id { Key: day of the week { Trips[] } } }
     with open(GTFS_LOCATION + "trips.txt", encoding="UTF-8") as trip_file:
         trip_reader = csv.DictReader(trip_file, delimiter=",")
         trip_data = list(trip_reader)
 
     for raw_trip in trip_data:
+        enum_map = [-1, 1, 0]
         trip_id = raw_trip["trip_id"]
         parent = all_lines[raw_trip["route_id"]]
         service_schedule = all_service_ids[raw_trip["service_id"]]
         headsign = raw_trip["trip_headsign"]
         direction_id = raw_trip["direction_id"]
+        wheelchair_accessible = enum_map[raw_trip["wheelchair_accessible"]]
+        bikes_allowed = enum_map[raw_trip["bikes_allowed"]]
+        exceptional = bool(raw_trip["exceptional"])
+        trip = Trip(trip_id, service_schedule, parent, direction_id, headsign, wheelchair_accessible, bikes_allowed, exceptional)
+        trips_list[trip.id] = trip
+        # self.icons_stop: list[str] -> dict[stop, str] # Not in use
 
-    # stops: list[dict[stop, arr, dep...]]
+    with open(GTFS_LOCATION + "stop_times.txt", encoding="UTF-8") as times_file:
+        times_reader = csv.DictReader(times_file, delimiter=",")
+        times_data = list(times_reader)
 
-    #self.wheelchair_accessible: int = UNDEFINED
-    #self.bikes_allowed: int = UNDEFINED
-    #self.exceptional: bool
+
+    # stops: dict-stop_id[dict[stop, arr, dep...]]
+
     #self.stop_times: dict  # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
-    #self.icons_stop: list[str]
-    #self.icons_line: list[str]
+
 
 
 def init_structures():
@@ -191,6 +200,7 @@ def init_structures():
     all_lines = init_lines()
     all_stations, all_stops = init_stations(all_lines)
     init_line_stations(all_lines, all_stations)
+    init_trips(all_lines, all_service_ids)  # TODO: TEMP CALL
     return all_stations, all_stops, all_lines, all_service_ids
 
 
