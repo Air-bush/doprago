@@ -164,7 +164,7 @@ def init_service_ids() -> dict:
 
 
 def init_trips(all_lines, all_service_ids):
-    trips_list = {} # Key: trip_id; Val: Trip => only temporary before line sorting
+    trips_list = {}  # Key: trip_id; Val: Trip => only temporary before line sorting
     all_trips = {}  # Key: Line { Key: direction_id { Key: day of the week { Trips[] } } }
     with open(GTFS_LOCATION + "trips.txt", encoding="UTF-8") as trip_file:
         trip_reader = csv.DictReader(trip_file, delimiter=",")
@@ -188,11 +188,13 @@ def init_trips(all_lines, all_service_ids):
         times_reader = csv.DictReader(times_file, delimiter=",")
         times_data = list(times_reader)
 
+    for stop_time in times_data:
+        current_trip = trips_list[stop_time["trip_id"]]
+
 
     # stops: dict-stop_id[dict[stop, arr, dep...]]
 
     #self.stop_times: dict  # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
-
 
 
 def init_structures():
