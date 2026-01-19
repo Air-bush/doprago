@@ -70,7 +70,7 @@ def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
     for line_data in stop_data["lines"]:
         line = all_lines[f"L{line_data["id"]}"]
         direction = line_data["direction"]
-        direction2 = line_data.get("direction2", None)
+        direction2 = line_data.get("direction2", None)  # TODO: Make a function after line stop init with for line bitseachr all stops by names to replce str with Stations
 
         #terminus_station1, terminus_station2 = None, None  TODO: Unable to find terminus station Objects -> Line.stops not yet initialised
         #for line_stop in line.stops["1"]:
@@ -177,8 +177,8 @@ def init_trips(all_lines, all_service_ids):
         service_schedule = all_service_ids[raw_trip["service_id"]]
         headsign = raw_trip["trip_headsign"]
         direction_id = raw_trip["direction_id"]
-        wheelchair_accessible = enum_map[raw_trip["wheelchair_accessible"]]
-        bikes_allowed = enum_map[raw_trip["bikes_allowed"]]
+        wheelchair_accessible = enum_map[int(raw_trip["wheelchair_accessible"])]
+        bikes_allowed = enum_map[int(raw_trip["bikes_allowed"])]
         exceptional = bool(raw_trip["exceptional"])
         trip = Trip(trip_id, service_schedule, parent, direction_id, headsign, wheelchair_accessible, bikes_allowed, exceptional)
         trips_list[trip.id] = trip
@@ -188,13 +188,16 @@ def init_trips(all_lines, all_service_ids):
         times_reader = csv.DictReader(times_file, delimiter=",")
         times_data = list(times_reader)
 
-    for stop_time in times_data:
+    for stop_time in times_data:  # Search for stop by getting sequence from line.stops then alter +i -i until found
         current_trip = trips_list[stop_time["trip_id"]]
+        stop_time_dict = {
+            "stop": stop_time["stop_id"],
+            "arrival_time": stop_time["arrival_time"],
+            "departure_time": stop_time["departure_time"]
+        }
+        current_trip.stops.append(stop_time_dict)
 
-
-    # stops: dict-stop_id[dict[stop, arr, dep...]]
-
-    #self.stop_times: dict  # Key: stopId/stopSequence Value: (ArrivalTime, DepartureTime, X for the not key)
+    # TODO: Add trips to lines by: Line { Key: direction_id { Key: day of the week { Trips[] } } }
 
 
 def init_structures():
@@ -208,8 +211,9 @@ def init_structures():
 
 if __name__ == "__main__":
     stations, stops, lines, service_ids = init_structures()
+    print(0)
 
-    for s in stations[1071]:
+    for s in stations[953]:
         print(s.to_string())
 
     #for s in stations[1029]:
