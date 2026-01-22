@@ -198,6 +198,8 @@ def init_trips(all_lines, all_service_ids):
         current_trip.stops.append(stop_time_dict)
 
     # TODO: Add trips to lines by: Line { Key: direction_id { Key: day of the week { Trips[] } } }
+    # TODO: New approach found - Instead of finding closest trip to now -> Use realtime api to find next departure trip
+    # => Line { key: trip_id val: Trip}
 
 
 def init_structures():
