@@ -5,6 +5,7 @@ import requests
 
 GTFS_LOCATION = "tempFiles/"
 raw_stations = requests.get("https://data.pid.cz/stops/json/stops.json").json()["stopGroups"]
+# TODO: ADD AUTOMATIC GTFS RENEWAL
 
 
 def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
@@ -20,16 +21,17 @@ def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
         main_traffic_type = raw_station["mainTrafficType"]
         station = Station(gtfs_id, node_id, cis, name, latitude, longitude, main_traffic_type)
 
-        stops: dict[int, Stop] = {}
+        station_stops: dict[int, Stop] = {}
         for raw_stop in raw_station["stops"]:
             stop = init_stop(raw_stop, station, all_lines)
-            stops[int(stop.id.split("/")[1])] = stop
-            all_stops[stop.id] = stop
-        station.stops = stops
+            station_stops[int(stop.id.split("/")[1])] = stop
+            for gtfs in stop.gtfs_ids:
+                all_stops[gtfs] = stop
+        station.stops = station_stops
 
         station_zones = []  # list of station zones
         station_lines = []  # list[Lines]
-        for stop in stops.values():
+        for stop in station_stops.values():
             for zone in stop.zones:
                 if zone not in station_zones:
                     station_zones.append(zone)
@@ -70,9 +72,9 @@ def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
     for line_data in stop_data["lines"]:
         line = all_lines[f"L{line_data["id"]}"]
         direction = line_data["direction"]
-        direction2 = line_data.get("direction2", None)  # TODO: Make a function after line stop init with for line bitseachr all stops by names to replce str with Stations
+        direction2 = line_data.get("direction2", None)  # Make a function after line stop init with for line bitseachr all stops by names to replce str with Stations -> CURRENTLY ABANDONED
 
-        #terminus_station1, terminus_station2 = None, None  TODO: Unable to find terminus station Objects -> Line.stops not yet initialised
+        #terminus_station1, terminus_station2 = None, None  --Unable to find terminus station Objects -> Line.stops not yet initialised -> CURRENTLY ABANDONED
         #for line_stop in line.stops["1"]:
         #    if line_stop.parent.name == direction:
         #        terminus_station1 = line_stop.parent
@@ -114,9 +116,6 @@ def init_lines() -> dict[str,Line]:
         is_substitute = bool(int(route_data["is_substitute_transport"]))
         route = Line(route_id, short_name, long_name, route_type, color,
                      text_color, is_night, is_regional, is_substitute)
-        
-        trips: dict  # key: direction_id, val: list of trips per direction  # TODO: Implement
-
         all_routes[route_id] = route
     return all_routes
 
@@ -135,7 +134,7 @@ def init_line_stations(all_routes: dict, all_stations: dict):
             current_route = stop_line["route_id"]
         if current_sequence.get(stop_line["direction_id"], None) is None:
             current_sequence[stop_line["direction_id"]] = []
-        for station in all_stations[int(stop_line["stop_id"][1:].split("Z")[0])]:  # Fix for multiple stations pro node - Uz ne jsem jen debil
+        for station in all_stations[int(stop_line["stop_id"][1:].split("Z")[0])]:
             for stop in station.stops.values():
                 if stop_line["stop_id"] in stop.gtfs_ids:
                     current_sequence[stop_line["direction_id"]].append(stop)
@@ -161,10 +160,6 @@ def init_service_ids() -> dict:
         all_service_days[service_exception["service_id"]].exceptions[service_exception["date"]] = int(service_exception["exception_type"])
 
     return all_service_days
-
-
-def gtfs_to_node(gtfs_id):  # U1040Z101P
-    gtfs_id
 
 
 def init_trips(all_lines, all_service_ids, all_stops):
@@ -196,9 +191,12 @@ def init_trips(all_lines, all_service_ids, all_stops):
     last_trip_id = times_data[0]["trip_id"]
     for stop_time in times_data:  # Search for stop by getting sequence from line.stops then alter +i -i until found
         if stop_time["trip_id"] != last_trip_id:
-            all_lines["L" + last_trip_id[:3]].trips[last_trip_id] = trips_list[last_trip_id]  # TODO: CHECK
+            all_lines["L" + last_trip_id.split("_")[0]].trips[last_trip_id] = trips_list[last_trip_id]
             i = 0
         last_trip_id = stop_time["trip_id"]
+
+        if stop_time["pickup_type"] == "1" and stop_time["drop_off_type"] == "1":
+            continue
 
         current_trip = trips_list[stop_time["trip_id"]]
         stop_time_dict = {
@@ -210,28 +208,23 @@ def init_trips(all_lines, all_service_ids, all_stops):
         current_trip.stop_indexes[stop_time["stop_id"]] = i
         i += 1
 
-    # TODO: Add trips to lines by: Line { Key: direction_id { Key: day of the week { Trips[] } } }
-    # TODO: New approach found - Instead of finding closest trip to now -> Use realtime api to find next departure trip
-    # => Line { key: trip_id val: Trip}
+    # Previous task: Add trips to lines by: Line { Key: direction_id { Key: day of the week { Trips[] } } }
+    # Previous task: New approach found - Instead of finding closest trip to now -> Use realtime api to find next departure trip
+    # => Line { key: trip_id val: Trip} -> CURRENTLY IMPLEMENTED
 
 
 def init_structures():
     all_service_ids = init_service_ids()
     all_lines = init_lines()
     all_stations, all_stops = init_stations(all_lines)
-    print(all_stops["953/102"])
-    return
     init_line_stations(all_lines, all_stations)
-    init_trips(all_lines, all_service_ids, all_stops)  # TODO: TEMP CALL
+    init_trips(all_lines, all_service_ids, all_stops)
     return all_stations, all_stops, all_lines, all_service_ids
 
 
 if __name__ == "__main__":
     stations, stops, lines, service_ids = init_structures()
     print(0)
-
-    for s in stations[953]:
-        print(s.to_string())
 
     #for s in stations[1029]:
     #    for ss in s.stops:
