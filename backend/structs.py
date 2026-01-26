@@ -91,6 +91,7 @@ class Trip:
         self.wheelchair_accessible: int = chairs
         self.bikes_allowed: int = bikes
         self.exceptional: bool = exceptional
+        self.stop_indexes: dict = {}  # Key: Stop id Val: stops[] index
         self.stops: list = []  # Value:{Stop, ArrivalTime, DepartureTime} TimeFormat: Hour:Min:Sec
         self.icons_stop: list[str]
         self.icons_line: list[str]

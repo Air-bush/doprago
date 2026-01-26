@@ -163,7 +163,7 @@ def init_service_ids() -> dict:
     return all_service_days
 
 
-def init_trips(all_lines, all_service_ids):
+def init_trips(all_lines, all_service_ids, all_stops):
     trips_list = {}  # Key: trip_id; Val: Trip => only temporary before line sorting
     all_trips = {}  # Key: Line { Key: direction_id { Key: day of the week { Trips[] } } }
     with open(GTFS_LOCATION + "trips.txt", encoding="UTF-8") as trip_file:
@@ -188,14 +188,23 @@ def init_trips(all_lines, all_service_ids):
         times_reader = csv.DictReader(times_file, delimiter=",")
         times_data = list(times_reader)
 
+    i = 0
+    last_trip_id = times_data[0]["trip_id"]
     for stop_time in times_data:  # Search for stop by getting sequence from line.stops then alter +i -i until found
+        if stop_time["trip_id"] != last_trip_id:
+            all_lines["L" + last_trip_id[:3]].trips[last_trip_id] = trips_list[last_trip_id] # TODO: CHECK
+            i = 0
+        last_trip_id = stop_time["trip_id"]
+
         current_trip = trips_list[stop_time["trip_id"]]
         stop_time_dict = {
-            "stop": stop_time["stop_id"],
+            "stop": all_stops[stop_time["stop_id"]],
             "arrival_time": stop_time["arrival_time"],
             "departure_time": stop_time["departure_time"]
         }
         current_trip.stops.append(stop_time_dict)
+        current_trip.stop_indexes[stop_time["stop_id"]] = i
+        i += 1
 
     # TODO: Add trips to lines by: Line { Key: direction_id { Key: day of the week { Trips[] } } }
     # TODO: New approach found - Instead of finding closest trip to now -> Use realtime api to find next departure trip
@@ -207,7 +216,7 @@ def init_structures():
     all_lines = init_lines()
     all_stations, all_stops = init_stations(all_lines)
     init_line_stations(all_lines, all_stations)
-    init_trips(all_lines, all_service_ids)  # TODO: TEMP CALL
+    init_trips(all_lines, all_service_ids, all_stops)  # TODO: TEMP CALL
     return all_stations, all_stops, all_lines, all_service_ids
 
 
