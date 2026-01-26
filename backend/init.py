@@ -163,6 +163,10 @@ def init_service_ids() -> dict:
     return all_service_days
 
 
+def gtfs_to_node(gtfs_id):  # U1040Z101P
+    gtfs_id
+
+
 def init_trips(all_lines, all_service_ids, all_stops):
     trips_list = {}  # Key: trip_id; Val: Trip => only temporary before line sorting
     all_trips = {}  # Key: Line { Key: direction_id { Key: day of the week { Trips[] } } }
@@ -192,7 +196,7 @@ def init_trips(all_lines, all_service_ids, all_stops):
     last_trip_id = times_data[0]["trip_id"]
     for stop_time in times_data:  # Search for stop by getting sequence from line.stops then alter +i -i until found
         if stop_time["trip_id"] != last_trip_id:
-            all_lines["L" + last_trip_id[:3]].trips[last_trip_id] = trips_list[last_trip_id] # TODO: CHECK
+            all_lines["L" + last_trip_id[:3]].trips[last_trip_id] = trips_list[last_trip_id]  # TODO: CHECK
             i = 0
         last_trip_id = stop_time["trip_id"]
 
@@ -215,6 +219,8 @@ def init_structures():
     all_service_ids = init_service_ids()
     all_lines = init_lines()
     all_stations, all_stops = init_stations(all_lines)
+    print(all_stops["953/102"])
+    return
     init_line_stations(all_lines, all_stations)
     init_trips(all_lines, all_service_ids, all_stops)  # TODO: TEMP CALL
     return all_stations, all_stops, all_lines, all_service_ids
