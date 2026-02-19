@@ -1,3 +1,5 @@
+# Identify stations by using node and cis (e.g. to distinguish Andel from Na Knizeci)
+# At each stop (Node) check if node_id matches Target and if so, then check CIS to be sure
 import requests
 
 from structs import *

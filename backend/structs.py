@@ -17,6 +17,7 @@ class Stop:
         self.platform_code: str = platform
         self.main_traffic_type: str = main_traffic
         self.lines: dict = {}  # key: Line, val: Line direction indexes stopping at this station/->list of terminus stations<-
+        self.all_movements: list = [] # {trip, arr_time, dep_time, stop_index}
 
     def to_string(self) -> str:
         return f"{self.id} ({self.alternative_name}) - {self.platform_code} -> {self.main_traffic_type} ({",".join(self.zones)})"

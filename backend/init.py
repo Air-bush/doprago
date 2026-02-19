@@ -1,4 +1,5 @@
 import csv
+import bisect
 
 from structs import *
 import requests
@@ -9,7 +10,7 @@ raw_stations = requests.get("https://data.pid.cz/stops/json/stops.json").json()[
 
 
 def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
-    all_stops = {}  # key: node_id, value: Stop
+    all_stops = {}  # key: gtfs_id, value: Stop
     all_stations = {}  # key: node_id, value: Station !!!! VALUE MIGHT BE A LIST (IN CASE MULTIPLE STATIONS PER NODE)
     for raw_station in raw_stations:
         node_id = raw_station["node"]
@@ -162,6 +163,10 @@ def init_service_ids() -> dict:
     return all_service_days
 
 
+def insort_trip_to_stop(ms:list, m:dict):
+    bisect.insort(ms, m, key=lambda move: int(move["departure_time"].replace(":","")))
+
+
 def init_trips(all_lines, all_service_ids, all_stops):
     trips_list = {}  # Key: trip_id; Val: Trip => only temporary before line sorting
     all_trips = {}  # Key: Line { Key: direction_id { Key: day of the week { Trips[] } } }
@@ -206,6 +211,15 @@ def init_trips(all_lines, all_service_ids, all_stops):
         }
         current_trip.stops.append(stop_time_dict)
         current_trip.stop_indexes[stop_time["stop_id"]] = i
+
+        movement_dict = {
+            "trip": current_trip,
+            "arrival_time": stop_time["arrival_time"],
+            "departure_time": stop_time["departure_time"],
+            "stop_index": i
+        }
+        insort_trip_to_stop(all_stops[stop_time["stop_id"]].all_movements, movement_dict)
+
         i += 1
 
     # Previous task: Add trips to lines by: Line { Key: direction_id { Key: day of the week { Trips[] } } }
@@ -224,6 +238,7 @@ def init_structures():
 
 if __name__ == "__main__":
     stations, stops, lines, service_ids = init_structures()
+    print(stations[142][2].)
     print(0)
 
     #for s in stations[1029]:
