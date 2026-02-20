@@ -60,6 +60,7 @@ class Station:
         self.lines: list = []
         self.stops: dict = {}  # Key: /id Val: Stop
         self.transfers: dict  # Key: (fromStop, toStop) Value: minTransferTime
+        self.all_movements: list = []  # {trip, stop_id, arr_time, dep_time, stop_index}
 
     def to_string(self) -> str:
         station_string = f"{self.id} ({self.name}) -> {self.main_traffic_type}; Zones: {",".join(self.zones)}\n"

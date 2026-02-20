@@ -218,7 +218,11 @@ def init_trips(all_lines, all_service_ids, all_stops):
             "departure_time": stop_time["departure_time"],
             "stop_index": i
         }
-        insort_trip_to_stop(all_stops[stop_time["stop_id"]].all_movements, movement_dict)
+        current_stop = all_stops[stop_time["stop_id"]]
+        insort_trip_to_stop(current_stop.all_movements, movement_dict)
+
+        movement_dict["stop_id"] = current_stop.id
+        insort_trip_to_stop(current_stop.parent.all_movements, movement_dict)
 
         i += 1
 
@@ -238,7 +242,7 @@ def init_structures():
 
 if __name__ == "__main__":
     stations, stops, lines, service_ids = init_structures()
-    print(stations[142][2].)
+    print(stations[142][2])
     print(0)
 
     #for s in stations[1029]:
