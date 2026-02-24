@@ -1,12 +1,30 @@
 import csv
 import bisect
+import shutil
+import requests
+import zipfile
+import os
 
 from structs import *
-import requests
 
-GTFS_LOCATION = "tempFiles/"
+GTFS_LOCATION = "gtfsPackege/"
 raw_stations = requests.get("https://data.pid.cz/stops/json/stops.json").json()["stopGroups"]
-# TODO: ADD AUTOMATIC GTFS RENEWAL
+
+# AUTOMATIC GTFS FILES RENEWAL ON START-UP
+def update_gtfs():
+    gtfs_update = requests.get("https://data.pid.cz/PID_GTFS.zip")
+    gtfs_update.raise_for_status()
+    if os.path.exists("gtfsPackege"):
+        shutil.rmtree("gtfsPackege")
+    os.makedirs("gtfsPackege")
+    with open("gtfs_update.zip", "wb") as file:
+        file.write(gtfs_update.content)
+    with zipfile.ZipFile("gtfs_update.zip", "r") as zip_ref:
+        zip_ref.extractall("gtfsPackege")
+    os.remove("gtfs_update.zip")
+
+#update_gtfs() TODO: TEMP COVERED
+#-----------------------------------------
 
 
 def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
@@ -164,7 +182,7 @@ def init_service_ids() -> dict:
 
 
 def insort_trip_to_stop(ms:list, m:dict):
-    bisect.insort(ms, m, key=lambda move: int(move["departure_time"].replace(":","")))
+    bisect.insort(ms, m, key=lambda move: move["departure_time"])
 
 
 def init_trips(all_lines, all_service_ids, all_stops):
@@ -206,16 +224,16 @@ def init_trips(all_lines, all_service_ids, all_stops):
         current_trip = trips_list[stop_time["trip_id"]]
         stop_time_dict = {
             "stop": all_stops[stop_time["stop_id"]],
-            "arrival_time": stop_time["arrival_time"],
-            "departure_time": stop_time["departure_time"]
+            "arrival_time": int(stop_time["arrival_time"].replace(":","")),
+            "departure_time": int(stop_time["departure_time"].replace(":",""))
         }
         current_trip.stops.append(stop_time_dict)
         current_trip.stop_indexes[stop_time["stop_id"]] = i
 
         movement_dict = {
             "trip": current_trip,
-            "arrival_time": stop_time["arrival_time"],
-            "departure_time": stop_time["departure_time"],
+            "arrival_time": int(stop_time["arrival_time"].replace(":","")),
+            "departure_time": int(stop_time["departure_time"].replace(":","")),
             "stop_index": i
         }
         current_stop = all_stops[stop_time["stop_id"]]

@@ -12,10 +12,6 @@ from init import init_structures
 
 #CURRENT RAM USAGE => 2400 MB
 
-GOLEMIO_APIKEY = ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MzQ1OCwiaWF0IjoxNzQzMDA5NT"
-                  "I0LCJleHAiOjExNzQzMDA5NTI0LCJpc3MiOiJnb2xlbWlvIiwianRpIjoiOTNiOTY0OTEtM"
-                  "jY0Yy00M2JkLWEwNTgtMDA0YWQ0ZTMzOGIzIn0.VQ40lUdu09Pfgug8EmkaDkYgNDAlKR21-anL9PJJUmw")
-
 _stations, _stops, _lines, _service_ids = init_structures()
 
 # Andel-MetroB : 1040;58759
@@ -62,19 +58,23 @@ def find_closest_departure(station, time=None) -> int:
     if not time:
         now = datetime.datetime.now()
         time = int(now.strftime("%H%M%S"))
-    pos = bisect.bisect_left(station.all_movements, time, key=lambda d: int(d["departure_time"].replace(":","")))
+    pos = bisect.bisect_left(station.all_movements, time, key=lambda d: d["departure_time"])
     return pos
 
 
-def get_departures(station, time=None, padding=3, default_count=10):
+def get_departures(station: Station|Stop, time=None, padding=3, default_count=10):
     now_index = find_closest_departure(station, time)
 
 
-def get_unique_departures_now(station, time=None, padding=3, search_pool_size=20):
+def get_line_departures(station: Station|Stop, line: Line, time=None, padding=3, default_count=10):
     pass
 
 
-def get_all_unique_departures(station):
+def get_unique_departures_now(station: Station|Stop, time=None, padding=3, search_pool_size=20):
+    pass
+
+
+def get_all_unique_departures(station: Station|Stop):
     pass  # Gets searched from station.move from index 0 -> For easiest finding trips for fastest route calculating (uniques are assumed from station.lines)
     # Maybe search from sometime before now cause there could be services limited to daytime (e.g. night transport, substitutes, morning/evening service)
 
