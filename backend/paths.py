@@ -62,6 +62,24 @@ def find_closest_departure(station, time=None) -> int:
     return pos
 
 
+def get_departure_index(station: Station|Stop, index):
+    return station.all_movements[index]
+
+
+def get_departure_time(station: Station|Stop, time):
+    return find_closest_departure(station, time)
+
+
+def get_departures_strict(station: Station|Stop, time=None, count=10, padding=3):
+    now_index = find_closest_departure(station, time)
+    departures = []
+    i = now_index
+    while i < now_index + count:
+        departures.append(station.all_movements[i])
+        i += 1
+    return departures
+
+
 def get_departures(station: Station|Stop, time=None, padding=3, default_count=10):
     now_index = find_closest_departure(station, time)
 
