@@ -111,9 +111,9 @@ class ServiceSchedule:
         self.fri: bool = True if self.service_id[4] == "1" else False
         self.sat: bool = True if self.service_id[5] == "1" else False
         self.sun: bool = True if self.service_id[6] == "1" else False
-        self.start_date: str = start  # Year-4Dig Month-2Dig Day-2Dig
-        self.end_date: str = end
-        self.exceptions: dict[str, int] = {}  # Key: exception date, Val: 1/2 (service added/service removed)
+        self.start_date: int = start  # Year-4Dig Month-2Dig Day-2Dig
+        self.end_date: int = end
+        self.exceptions: dict[int, int] = {}  # Key: exception date, Val: 1/2 (service added/service removed)
 
 # Trips -> sorted by direction ids and then by dates for easier access -> dict { direction_id: { mon:[], tue:[]}
 # Implement searching algorithm of halfing previous list part for faster services_now finding -> LIST MUST BE SORTED BY DEPARTURE TIME

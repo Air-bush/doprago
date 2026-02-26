@@ -3,6 +3,8 @@
 # If CIS doesnt match just check if it comes in a couple of stops on the trip (if not just call it a day with the Node)
 # Disregard check for cis ids if station names on node dont match
 
+# For fastest route save by trips e.g. station1->station2 via Metro (7 intermediates|cca.13mins)
+
 import bisect
 import datetime
 import requests
@@ -48,8 +50,11 @@ def console_end_nodes():
     return start_station,end_station
 
 
-#---------------------------------------------------------------------------------------------------
+def get_temp_transfer_time(line1:Line, line2:Line):
+    pass
 
+
+#---------------------------------------------------------------------------------------------------
 def get_end_nodes():
     return console_end_nodes()
 
@@ -62,26 +67,57 @@ def find_closest_departure(station, time=None) -> int:
     return pos
 
 
+def is_departure_valid(departure:dict=None, date=None) -> bool:
+    if not date:
+        now = datetime.datetime.now()
+        date = int(now.strftime("%Y%m%d"))
+    else:
+        now = datetime.datetime.strptime(date, "%Y%m%d")
+
+    schedule: ServiceSchedule = departure["trip"].service
+    day_of_week = int(now.strftime("%w"))-1
+    if schedule.service_id[day_of_week] == "0":
+        return False
+    if schedule.start_date > date:
+        return False
+    if schedule.end_date < date:
+        return False
+    if date in schedule.exceptions:
+        return False
+    return True
+
+
 def get_departure_index(station: Station|Stop, index):
     return station.all_movements[index]
 
 
 def get_departure_time(station: Station|Stop, time):
-    return find_closest_departure(station, time)
+    return station.all_movements[find_closest_departure(station, time)]
+
+
+def get_next_departure(station: Station|Stop, index):
+    while True:
+        departure = station.all_movements[index]
+        if is_departure_valid(departure):
+            return departure, index+1
+        index += 1
+        if index >= len(station.all_movements):
+            index = 0
 
 
 def get_departures_strict(station: Station|Stop, time=None, count=10, padding=3):
     now_index = find_closest_departure(station, time)
     departures = []
     i = now_index
-    while i < now_index + count:
-        departures.append(station.all_movements[i])
-        i += 1
+    while len(departures) < count:
+        next_departure, i = get_next_departure(station, i)
+        departures.append(next_departure)
     return departures
 
 
 def get_departures(station: Station|Stop, time=None, padding=3, default_count=10):
     now_index = find_closest_departure(station, time)
+    # like get departures strict but ends with more or less departures according to the time to departure
 
 
 def get_line_departures(station: Station|Stop, line: Line, time=None, padding=3, default_count=10):
@@ -100,4 +136,4 @@ def get_all_unique_departures(station: Station|Stop):
 if __name__ == "__main__":
     #s_node, e_node = get_end_nodes()
     s_node = _stations[1040][0]
-    print(find_closest_departure(s_node))
+    print(get_departures_strict(s_node))

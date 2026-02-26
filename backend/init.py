@@ -167,8 +167,8 @@ def init_service_ids() -> dict:
 
     for service in calendar_data:
         service_id = service["service_id"]
-        start_date = service["start_date"]
-        end_date = service["end_date"]
+        start_date = int(service["start_date"])
+        end_date = int(service["end_date"])
         all_service_days[service_id] = ServiceSchedule(service_id, start_date, end_date)
 
     with open(GTFS_LOCATION + "calendar_dates.txt", encoding="UTF-8") as exceptions_file:
@@ -176,7 +176,7 @@ def init_service_ids() -> dict:
         exceptions_data = list(exceptions_reader)
 
     for service_exception in exceptions_data:
-        all_service_days[service_exception["service_id"]].exceptions[service_exception["date"]] = int(service_exception["exception_type"])
+        all_service_days[service_exception["service_id"]].exceptions[int(service_exception["date"])] = int(service_exception["exception_type"])
 
     return all_service_days
 
