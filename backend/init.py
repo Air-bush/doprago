@@ -5,6 +5,7 @@ import requests
 import zipfile
 import os
 
+import structs
 from structs import *
 
 GTFS_LOCATION = "gtfsPackege/"
@@ -23,7 +24,7 @@ def update_gtfs():
         zip_ref.extractall("gtfsPackege")
     os.remove("gtfs_update.zip")
 
-#update_gtfs() TODO: TEMP COVERED
+#update_gtfs()  # TODO: TEMP COVERED
 #-----------------------------------------
 
 
@@ -236,6 +237,7 @@ def init_trips(all_lines, all_service_ids, all_stops):
             "departure_time": int(stop_time["departure_time"].replace(":","")),
             "stop_index": i
         }
+        if type(movement_dict["trip"]) != structs.Trip: print(type(movement_dict["trip"]))
         current_stop = all_stops[stop_time["stop_id"]]
         insort_trip_to_stop(current_stop.all_movements, movement_dict)
 

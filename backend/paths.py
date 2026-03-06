@@ -1,18 +1,23 @@
 # Identify stations by using node and cis (e.g. to distinguish Andel from Na Knizeci)
 # At each stop (Node) check if node_id matches Target and if so, then check CIS to be sure
-# If CIS doesnt match just check if it comes in a couple of stops on the trip (if not just call it a day with the Node)
-# Disregard check for cis ids if station names on node dont match
+# If CIS doesn't match just check if it comes in a couple of stops on the trip (if not just call it a day with the Node)
+# Disregard check for cis ids if station names on node don't match
 
 # For fastest route save by trips e.g. station1->station2 via Metro (7 intermediates|cca.13mins)
 
+# Only allow metro and train to traverse the node
+
 import bisect
 import datetime
-import requests
 
 from structs import *
 from init import init_structures
 
 #CURRENT RAM USAGE => 2400 MB
+
+MINIMUM_DEPARTURE_COUNT = 5
+CLOSEST_TO_LAST_DEPARTURE = 1500
+LONGEST_TO_LAST_DEPARTURE = 10000
 
 _stations, _stops, _lines, _service_ids = init_structures()
 
@@ -116,8 +121,25 @@ def get_departures_strict(station: Station|Stop, time=None, count=10, padding=3)
 
 
 def get_departures(station: Station|Stop, time=None, padding=3, default_count=10):
-    now_index = find_closest_departure(station, time)
-    # like get departures strict but ends with more or less departures according to the time to departure
+    if not time:
+        now = datetime.datetime.now()
+        time = int(now.strftime("%H%M%S"))
+
+    departures = get_departures_strict(station, time, default_count, padding)
+
+    if time + LONGEST_TO_LAST_DEPARTURE >= departures[len(departures)-1]["departure_time"] >= time + CLOSEST_TO_LAST_DEPARTURE:
+        return departures
+
+    if departures[MINIMUM_DEPARTURE_COUNT]["departure_time"] > time + LONGEST_TO_LAST_DEPARTURE:
+        pos = bisect.bisect_left(departures, time+LONGEST_TO_LAST_DEPARTURE, key=lambda d: d["departure_time"])
+        return departures[:pos]
+    else:
+        i = find_closest_departure(station,departures[len(departures)-1]["departure_time"]) + 1
+        while True:
+            next_departure, i = get_next_departure(station, i)
+            departures.append(next_departure)
+            if next_departure["departure_time"] >= time + CLOSEST_TO_LAST_DEPARTURE: break
+    return departures
 
 
 def get_line_departures(station: Station|Stop, line: Line, time=None, padding=3, default_count=10):
@@ -134,6 +156,6 @@ def get_all_unique_departures(station: Station|Stop):
 
 
 if __name__ == "__main__":
+    print("---INIT COMPLETED---")
     #s_node, e_node = get_end_nodes()
     s_node = _stations[1040][0]
-    print(get_departures_strict(s_node))
