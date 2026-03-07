@@ -214,11 +214,12 @@ def init_trips(all_lines, all_service_ids, all_stops):
         parent = all_lines[raw_trip["route_id"]]
         service_schedule = all_service_ids[raw_trip["service_id"]]
         headsign = raw_trip["trip_headsign"]
+        shape_id = raw_trip["shape_id"]
         direction_id = raw_trip["direction_id"]
         wheelchair_accessible = enum_map[int(raw_trip["wheelchair_accessible"])]
         bikes_allowed = enum_map[int(raw_trip["bikes_allowed"])]
         exceptional = bool(raw_trip["exceptional"])
-        trip = Trip(trip_id, service_schedule, parent, direction_id, headsign, wheelchair_accessible, bikes_allowed, exceptional)
+        trip = Trip(trip_id, service_schedule, parent, direction_id, shape_id, headsign, wheelchair_accessible, bikes_allowed, exceptional)
         trips_list[trip.id] = trip
         # self.icons_stop: list[str] -> dict[stop, str] # Not in use
 

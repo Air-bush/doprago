@@ -84,11 +84,12 @@ class Trip:
     TROLLEY_BUS = "Tb"
     BUS = "Bu"
 
-    def __init__(self, trip_id, service, parent_line, direction_id, head_sign, chairs = UNDEFINED, bikes = UNDEFINED, exceptional = False):
+    def __init__(self, trip_id, service, parent_line, direction_id, shape_id, head_sign, chairs = UNDEFINED, bikes = UNDEFINED, exceptional = False):
         self.id: str = trip_id
         self.service: ServiceSchedule = service
         self.parent_line: Line = parent_line
         self.direction_id: int = direction_id
+        self.shape_id: str = shape_id
         self.headsign: str = head_sign
         self.wheelchair_accessible: int = chairs
         self.bikes_allowed: int = bikes

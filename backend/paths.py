@@ -100,7 +100,7 @@ def get_departure_time(station: Station|Stop, time):
     return station.all_movements[find_closest_departure(station, time)]
 
 
-def get_next_departure(station: Station|Stop, index):
+def get_next_departure(station: Station|Stop, index, date=None):
     while True:
         departure = station.all_movements[index]
         if is_departure_valid(departure):
@@ -153,6 +153,10 @@ def get_unique_departures_now(station: Station|Stop, time=None, padding=3, searc
 def get_all_unique_departures(station: Station|Stop):
     pass  # Gets searched from station.move from index 0 -> For easiest finding trips for fastest route calculating (uniques are assumed from station.lines)
     # Maybe search from sometime before now cause there could be services limited to daytime (e.g. night transport, substitutes, morning/evening service)
+
+
+def djisktra_alfa(start: Station, end: Station):
+    start_time = int(datetime.datetime.now().strftime("%H%M00")) + 100
 
 
 if __name__ == "__main__":
