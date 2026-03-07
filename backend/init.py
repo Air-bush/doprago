@@ -3,6 +3,7 @@ import bisect
 import shutil
 import requests
 import zipfile
+import datetime
 import os
 
 import structs
@@ -13,6 +14,17 @@ raw_stations = requests.get("https://data.pid.cz/stops/json/stops.json").json()[
 
 # AUTOMATIC GTFS FILES RENEWAL ON START-UP
 def update_gtfs():
+    now = datetime.datetime.now()
+    try:
+        with open("downloadsChecks.txt") as file:
+            last_update = int(file.readline())
+            if last_update == int(now.strftime("%Y%m%d")):
+                print("---DATASET UP-TO-DATE---")
+                return
+    except FileNotFoundError:
+        with open("downloadsChecks.txt", "w") as file:
+            file.write(now.strftime("%Y%m%d"))
+
     gtfs_update = requests.get("https://data.pid.cz/PID_GTFS.zip")
     gtfs_update.raise_for_status()
     if os.path.exists("gtfsPackege"):
@@ -23,8 +35,11 @@ def update_gtfs():
     with zipfile.ZipFile("gtfs_update.zip", "r") as zip_ref:
         zip_ref.extractall("gtfsPackege")
     os.remove("gtfs_update.zip")
+    with open("downloadsChecks.txt", "w") as file:
+        file.write(now.strftime("%Y%m%d"))
+    print("---DATASET UPDATED---")
 
-#update_gtfs()  # TODO: TEMP COVERED
+update_gtfs()
 #-----------------------------------------
 
 
@@ -257,6 +272,7 @@ def init_structures():
     all_stations, all_stops = init_stations(all_lines)
     init_line_stations(all_lines, all_stations)
     init_trips(all_lines, all_service_ids, all_stops)
+    print("---INIT COMPLETED---")
     return all_stations, all_stops, all_lines, all_service_ids
 
 

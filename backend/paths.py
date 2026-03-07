@@ -156,6 +156,5 @@ def get_all_unique_departures(station: Station|Stop):
 
 
 if __name__ == "__main__":
-    print("---INIT COMPLETED---")
     #s_node, e_node = get_end_nodes()
     s_node = _stations[1040][0]
