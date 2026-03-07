@@ -146,8 +146,22 @@ def get_line_departures(station: Station|Stop, line: Line, time=None, padding=3,
     pass
 
 
-def get_unique_departures_now(station: Station|Stop, time=None, padding=3, search_pool_size=20):
+def are_trips_similar(trip1:Trip, trip2:Trip) -> bool:
     pass
+
+
+def get_unique_departures_now(station: Station|Stop, time=None, padding=3, search_pool_size=20):
+    # TODO: Very inefficient function (probably almost n^2)
+    departures = get_departures(station,time,padding)
+    unique_departures = []
+    for departure in departures:
+        similar = False
+        for unique_departure in unique_departures:
+            if are_trips_similar(departure["trip"], unique_departure["trip"]):
+                similar = True
+                break
+        if similar: continue
+        unique_departures.append(departure)
 
 
 def get_all_unique_departures(station: Station|Stop):
