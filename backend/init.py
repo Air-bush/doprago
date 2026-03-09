@@ -9,33 +9,33 @@ import os
 import structs
 from structs import *
 
-GTFS_LOCATION = "backend/gtfsPackege/"
+GTFS_LOCATION = "gtfsPackege/"
 raw_stations = requests.get("https://data.pid.cz/stops/json/stops.json").json()["stopGroups"]
 
 # AUTOMATIC GTFS FILES RENEWAL ON START-UP
-def update_gtfs():
+def update_gtfs():  # TODO: Places files pretty much wherever it wants to
     now = datetime.datetime.now()
     try:
-        with open("backend/downloadsChecks.txt") as file:
+        with open("downloadsChecks.txt") as file:
             last_update = int(file.readline())
             if last_update == int(now.strftime("%Y%m%d")):
                 print("---DATASET UP-TO-DATE---")
                 return
     except FileNotFoundError:
-        nf = open("backend/downloadsChecks.txt", "x")
+        nf = open("downloadsChecks.txt", mode="x")
         nf.close()
 
     gtfs_update = requests.get("https://data.pid.cz/PID_GTFS.zip")
     gtfs_update.raise_for_status()
-    if os.path.exists("backend/gtfsPackege"):
-        shutil.rmtree("backend/gtfsPackege")
-    os.makedirs("backend/gtfsPackege")
-    with open("backend/gtfs_update.zip", "wb") as file:
+    if os.path.exists("gtfsPackege"):
+        shutil.rmtree("gtfsPackege")
+    os.makedirs("gtfsPackege")
+    with open("gtfs_update.zip", "wb") as file:
         file.write(gtfs_update.content)
-    with zipfile.ZipFile("backend/gtfs_update.zip", "r") as zip_ref:
-        zip_ref.extractall("backend/gtfsPackege")
-    os.remove("backend/gtfs_update.zip")
-    with open("backend/downloadsChecks.txt", "w") as file:
+    with zipfile.ZipFile("gtfs_update.zip", "r") as zip_ref:
+        zip_ref.extractall("gtfsPackege")
+    os.remove("gtfs_update.zip")
+    with open("downloadsChecks.txt", "w") as file:
         file.write(now.strftime("%Y%m%d"))
     print("---DATASET UPDATED---")
 
