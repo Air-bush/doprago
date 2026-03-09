@@ -147,7 +147,8 @@ def get_line_departures(station: Station|Stop, line: Line, time=None, padding=3,
 
 
 def are_trips_similar(trip1:Trip, trip2:Trip) -> bool:
-    pass
+    #TODO: Might need rework (kind of quickly thought of sollution)
+    return trip1.shape_id == trip2.shape_id
 
 
 def get_unique_departures_now(station: Station|Stop, time=None, padding=3, search_pool_size=20):
