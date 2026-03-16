@@ -5,7 +5,8 @@
 
 # For fastest route save by trips e.g. station1->station2 via Metro (7 intermediates|cca.13mins)
 
-# Only allow metro and train to traverse the node
+# Only allow metro and train to traverse the node -> switch station without transport only possible if getting of or on a metro/train
+# Separate train station will be connected and not counted as node traversing
 
 import bisect
 import datetime
@@ -64,10 +65,7 @@ def get_end_nodes():
     return console_end_nodes()
 
 
-def find_closest_departure(station, time=None) -> int:
-    if not time:
-        now = datetime.datetime.now()
-        time = int(now.strftime("%H%M%S"))
+def find_closest_departure(station, time) -> int:
     pos = bisect.bisect_left(station.all_movements, time, key=lambda d: d["departure_time"])
     return pos
 
@@ -111,7 +109,10 @@ def get_next_departure(station: Station|Stop, index, date=None):
 
 
 def get_departures_strict(station: Station|Stop, time=None, count=10, padding=3):
-    now_index = find_closest_departure(station, time)
+    if not time:
+        now = datetime.datetime.now()
+        time = int(now.strftime("%H%M%S"))
+    now_index = find_closest_departure(station, time+(padding*100))
     departures = []
     i = now_index
     while len(departures) < count:

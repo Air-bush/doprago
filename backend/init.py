@@ -107,7 +107,7 @@ def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
     for line_data in stop_data["lines"]:
         line = all_lines[f"L{line_data["id"]}"]
         direction = line_data["direction"]
-        direction2 = line_data.get("direction2", None)  # Make a function after line stop init with for line bitseachr all stops by names to replce str with Stations -> CURRENTLY ABANDONED
+        direction2 = line_data.get("direction2", None)  # Make a function after line stop init with for line bitsearch all stops by names to replace str with Stations -> CURRENTLY ABANDONED
 
         #terminus_station1, terminus_station2 = None, None  --Unable to find terminus station Objects -> Line.stops not yet initialised -> CURRENTLY ABANDONED
         #for line_stop in line.stops["1"]:
