@@ -10,6 +10,7 @@
 
 import bisect
 import datetime
+import heapq
 
 from structs import *
 from init import init_structures
@@ -152,7 +153,7 @@ def are_trips_similar(trip1:Trip, trip2:Trip) -> bool:
     return trip1.shape_id == trip2.shape_id
 
 
-def get_unique_departures_now(station: Station|Stop, time=None, padding=3, search_pool_size=20):
+def get_unique_departures_now(station: Station|Stop, time=None, padding=3):
     # TODO: Very inefficient function (probably almost n^2)
     departures = get_departures(station,time,padding)
     unique_departures = []
@@ -164,6 +165,7 @@ def get_unique_departures_now(station: Station|Stop, time=None, padding=3, searc
                 break
         if similar: continue
         unique_departures.append(departure)
+    return unique_departures
 
 
 def get_all_unique_departures(station: Station|Stop):
@@ -171,8 +173,32 @@ def get_all_unique_departures(station: Station|Stop):
     # Maybe search from sometime before now cause there could be services limited to daytime (e.g. night transport, substitutes, morning/evening service)
 
 
-def djisktra_alfa(start: Station, end: Station):
+def dijkstra_alfa(start: Station, end: Station, departure_time=None):
     start_time = int(datetime.datetime.now().strftime("%H%M00")) + 100
+    distances = {start: 0} #Station: relative distance
+    predecessors = {start: None} #Station: movement dict (trip, arr, dep, i)
+    relax_queue = [(0, start)] #relative distance, Station
+    heapq.heapify(relax_queue)
+
+    while len(relax_queue) > 0:
+        queued_distance, current_node = heapq.heappop(relax_queue)
+        if current_node == end:
+            break
+        if queued_distance != distances[current_node]:
+            continue
+
+        departures = get_unique_departures_now(current_node, start_time+queued_distance)
+        arrival = predecessors[current_node]
+        if arrival: departures.append(arrival)
+
+        for departure in departures:
+            next_stop = departure["trip"].stops[departure["stop_index"]+1]
+            new_distance = next_stop["arrival_time"] - start_time
+            neighbour = next_stop["stop"].parent
+            if new_distance < distances[neighbour]:
+                distances[neighbour] = new_distance
+                predecessors[neighbour] = departure
+                heapq.heappush(relax_queue, (new_distance, neighbour))
 
 
 if __name__ == "__main__":
