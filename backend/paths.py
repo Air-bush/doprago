@@ -195,13 +195,14 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
 
         departures = get_unique_departures_now(current_node, start_time+queued_distance)
         arrival = predecessors[current_node]
-        if arrival: departures.append(arrival)
+        if arrival:
+            departures.append(arrival)
 
         for departure in departures:
             next_stop_index = departure["stop_index"]+1
             if next_stop_index >= len(departure["trip"].stops):
                 continue
-            next_stop = departure["trip"].stops[+1]
+            next_stop = departure["trip"].stops[next_stop_index]
             new_distance: int = next_stop["arrival_time"] - start_time
             neighbour = next_stop["stop"].parent
             if distances.get(neighbour, None) is None or new_distance < distances[neighbour]:
@@ -209,6 +210,30 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
                 predecessors[neighbour] = departure
                 real_distance_index = abs(end_pos[0]-neighbour.latitude) + abs(end_pos[1]-neighbour.longitude)
                 heapq.heappush(relax_queue, (new_distance, real_distance_index, neighbour))
+
+    raw_route = []
+    current_node = end
+    while current_node != start:
+        print(predecessors[current_node])
+        previous_stop_departure = predecessors[current_node]
+        # trip, departure stop, departure time, arrival stop, arrival time
+        # previous -> current node
+        edge_trip = previous_stop_departure["trip"]
+        previous_stop = edge_trip.stops[previous_stop_departure["stop_index"]]["stop"]
+        current_stop = edge_trip.stops[previous_stop_departure["stop_index"]+1]
+        edge = {
+            "trip": edge_trip,
+            "departure_stop": previous_stop,
+            "departure_time": previous_stop_departure["departure_time"],
+            "arrival_stop": current_stop["stop"],
+            "arrival_time": current_stop["arrival_time"],
+            "arrival_distance": distances[current_node]
+
+        }
+        raw_route.append(edge)
+        current_node = previous_stop.parent
+    raw_route.reverse()
+    #TODO: je tu nejakej pruser
 
 
 if __name__ == "__main__":
