@@ -76,7 +76,7 @@ def is_departure_valid(departure:dict=None, date=None) -> bool:
         now = datetime.datetime.now()
         date = int(now.strftime("%Y%m%d"))
     else:
-        now = datetime.datetime.strptime(date, "%Y%m%d")
+        now = datetime.datetime.strptime(str(date), "%Y%m%d")
 
     schedule: ServiceSchedule = departure["trip"].service
     day_of_week = int(now.strftime("%w"))-1
@@ -99,15 +99,20 @@ def get_departure_time(station: Station|Stop, time):
     return station.all_movements[find_closest_departure(station, time)]
 
 
-def get_next_departure(station: Station|Stop, index, date=None):
+def get_next_departure(station: Station|Stop, index, time, date=None):
+    if not date:
+        now = datetime.datetime.now()
+        date = int(now.strftime("%Y%m%d"))
+
     while True:
-        departure = station.all_movements[index]
-        if is_departure_valid(departure):
-            return departure, index+1
-        index += 1
         if index >= len(station.all_movements):
             index = 0
-
+        departure = station.all_movements[index]
+        if departure["arrival_time"] < time:  # TODO: WARNING WONT WORK AT END OF MONTH EVENING
+            date+=1
+        if is_departure_valid(departure, date):
+            return departure, index+1
+        index += 1
 
 def get_departures_strict(station: Station|Stop, time=None, count=10, padding=3):
     if not time:
@@ -117,7 +122,7 @@ def get_departures_strict(station: Station|Stop, time=None, count=10, padding=3)
     departures = []
     i = now_index
     while len(departures) < count:
-        next_departure, i = get_next_departure(station, i)
+        next_departure, i = get_next_departure(station, i, time)
         departures.append(next_departure)
     return departures
 
@@ -138,7 +143,7 @@ def get_departures(station: Station|Stop, time=None, padding=3, default_count=10
     else:
         i = find_closest_departure(station,departures[len(departures)-1]["departure_time"]) + 1
         while True:
-            next_departure, i = get_next_departure(station, i)
+            next_departure, i = get_next_departure(station, i, time)
             departures.append(next_departure)
             if next_departure["departure_time"] >= time + CLOSEST_TO_LAST_DEPARTURE: break
     return departures
@@ -177,11 +182,12 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
     start_time = int(datetime.datetime.now().strftime("%H%M00")) + 100
     distances = {start: 0} #Station: relative distance
     predecessors = {start: None} #Station: movement dict (trip, arr, dep, i)
-    relax_queue = [(0, start)] #relative distance, Station
+    relax_queue = [(0, 0, start)] #relative distance, distance from end, Station
     heapq.heapify(relax_queue)
+    end_pos = [end.latitude, end.longitude]
 
     while len(relax_queue) > 0:
-        queued_distance, current_node = heapq.heappop(relax_queue)
+        queued_distance, x, current_node = heapq.heappop(relax_queue)
         if current_node == end:
             break
         if queued_distance != distances[current_node]:
@@ -192,15 +198,24 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         if arrival: departures.append(arrival)
 
         for departure in departures:
-            next_stop = departure["trip"].stops[departure["stop_index"]+1]
-            new_distance = next_stop["arrival_time"] - start_time
+            next_stop_index = departure["stop_index"]+1
+            if next_stop_index >= len(departure["trip"].stops):
+                continue
+            next_stop = departure["trip"].stops[+1]
+            new_distance: int = next_stop["arrival_time"] - start_time
             neighbour = next_stop["stop"].parent
-            if new_distance < distances[neighbour]:
+            if distances.get(neighbour, None) is None or new_distance < distances[neighbour]:
                 distances[neighbour] = new_distance
                 predecessors[neighbour] = departure
-                heapq.heappush(relax_queue, (new_distance, neighbour))
+                real_distance_index = abs(end_pos[0]-neighbour.latitude) + abs(end_pos[1]-neighbour.longitude)
+                heapq.heappush(relax_queue, (new_distance, real_distance_index, neighbour))
 
 
 if __name__ == "__main__":
     #s_node, e_node = get_end_nodes()
-    s_node = _stations[1040][0]
+    s_node = _stations[1029][0]
+    e_node = _stations[710][0]
+    dijkstra_alfa(s_node, e_node)
+
+
+# To implement: route review and outputing, modular departure time, processing time saving measures, node traversing

@@ -10,8 +10,8 @@ class Stop:
         self.gtfs_ids: list[str] = gtfs_ids
         self.id: str = node_id
         self.alternative_name: str = alt_name
-        self.latitude: str = lat
-        self.longitude: str = lon
+        self.latitude: float = lat
+        self.longitude: float = lon
         self.zones: list[str] = zones
         self.wheelchair_boarding: int = UNDEFINED
         self.platform_code: str = platform
@@ -53,8 +53,8 @@ class Station:
         self.id: int = node_id
         self.cis: int = cis
         self.name: str = name
-        self.latitude: str = lat
-        self.longitude: str = lon
+        self.latitude: float = lat
+        self.longitude: float = lon
         self.main_traffic_type: str = main_traffic
         self.zones: list = []
         self.lines: list = []

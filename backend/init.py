@@ -51,8 +51,8 @@ def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
         gtfs_id = f"U{node_id}"
         cis = int(raw_station["cis"])
         name = raw_station["name"]
-        latitude = raw_station["avgLat"]
-        longitude = raw_station["avgLon"]
+        latitude = float(raw_station["avgLat"])
+        longitude = float(raw_station["avgLon"])
         main_traffic_type = raw_station["mainTrafficType"]
         station = Station(gtfs_id, node_id, cis, name, latitude, longitude, main_traffic_type)
 
@@ -90,8 +90,8 @@ def init_stop(stop_data: dict, parent_station: Station, all_lines) -> Stop:
     gtfs_ids = stop_data["gtfsIds"]
     node_id = stop_data["id"]
     name = stop_data["altIdosName"]
-    latitude = stop_data["lat"]
-    longitude = stop_data["lon"]
+    latitude = float(stop_data["lat"])
+    longitude = float(stop_data["lon"])
     zones = stop_data["zone"].split(",")
     platform_code = stop_data.get("platform", UNDEFINED)
     main_traffic_type = stop_data["mainTrafficType"]
