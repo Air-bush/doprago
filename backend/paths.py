@@ -62,6 +62,9 @@ def get_temp_transfer_time(line1:Line, line2:Line):
 
 
 #---------------------------------------------------------------------------------------------------
+def time_to_seconds(t):
+    return (t // 10000) * 3600 + ((t // 100) % 100) * 60 + (t % 100)
+
 def get_end_nodes():
     return console_end_nodes()
 
@@ -107,9 +110,8 @@ def get_next_departure(station: Station|Stop, index, time, date=None):
     while True:
         if index >= len(station.all_movements):
             index = 0
+            date += 1  # TODO: WARNING WONT WORK AT END OF MONTH EVENING
         departure = station.all_movements[index]
-        if departure["arrival_time"] < time:  # TODO: WARNING WONT WORK AT END OF MONTH EVENING
-            date+=1
         if is_departure_valid(departure, date):
             return departure, index+1
         index += 1
@@ -179,16 +181,19 @@ def get_all_unique_departures(station: Station|Stop):
 
 
 def dijkstra_alfa(start: Station, end: Station, departure_time=None):
-    start_time = int(datetime.datetime.now().strftime("%H%M00")) + 100
+    start_time = time_to_seconds(int(datetime.datetime.now().strftime("%H%M00")) + 100)
     distances = {start: 0} #Station: relative distance
     predecessors = {start: None} #Station: movement dict (trip, arr, dep, i)
     relax_queue = [(0, 0, start)] #relative distance, distance from end, Station
     heapq.heapify(relax_queue)
     end_pos = [end.latitude, end.longitude]
 
+    route_found = False
     while len(relax_queue) > 0:
         queued_distance, x, current_node = heapq.heappop(relax_queue)
+        print("--" + current_node.name)
         if current_node == end:
+            route_found = True
             break
         if queued_distance != distances[current_node]:
             continue
@@ -196,44 +201,61 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         departures = get_unique_departures_now(current_node, start_time+queued_distance)
         arrival = predecessors[current_node]
         if arrival:
-            departures.append(arrival)
+            #departures.append(arrival["departure_dict"])
+            pass
 
         for departure in departures:
+            print(departure)
+            print(departure["trip"].parent_line.short_name, end="; ")
             next_stop_index = departure["stop_index"]+1
             if next_stop_index >= len(departure["trip"].stops):
+                print(str(len(departure["trip"].stops)) + "ENDING")
                 continue
             next_stop = departure["trip"].stops[next_stop_index]
-            new_distance: int = next_stop["arrival_time"] - start_time
+            new_distance: int = time_to_seconds(next_stop["arrival_time"]) - start_time
             neighbour = next_stop["stop"].parent
+            print(neighbour.name, end=" ")
+            print(next_stop["arrival_time"], end=" ")
             if distances.get(neighbour, None) is None or new_distance < distances[neighbour]:
+                print("(IN QUEUE)", end="")
                 distances[neighbour] = new_distance
-                predecessors[neighbour] = departure
+                predecessor_dict = {
+                    "trip": departure["trip"],
+                    "last_station": current_node,
+                    "last_index": departure["stop_index"],
+                    "last_departure": departure["departure_time"],
+                    "current_arrival": next_stop["arrival_time"],
+                    "departure_dict": ""  # TODO: CONNECTION OF CURRENT TRIP DOES NOT WORK IT NEEDS TO BE DEPARTURE FROM THE NEXT STATION
+                }
+                predecessors[neighbour] = predecessor_dict
                 real_distance_index = abs(end_pos[0]-neighbour.latitude) + abs(end_pos[1]-neighbour.longitude)
                 heapq.heappush(relax_queue, (new_distance, real_distance_index, neighbour))
+            print()
+    if not route_found:
+        return {}
 
+    print()
     raw_route = []
     current_node = end
     while current_node != start:
-        print(predecessors[current_node])
-        previous_stop_departure = predecessors[current_node]
+        print(current_node.name)
+        predecessor = predecessors[current_node]
         # trip, departure stop, departure time, arrival stop, arrival time
         # previous -> current node
-        edge_trip = previous_stop_departure["trip"]
-        previous_stop = edge_trip.stops[previous_stop_departure["stop_index"]]["stop"]
-        current_stop = edge_trip.stops[previous_stop_departure["stop_index"]+1]
         edge = {
-            "trip": edge_trip,
-            "departure_stop": previous_stop,
-            "departure_time": previous_stop_departure["departure_time"],
-            "arrival_stop": current_stop["stop"],
-            "arrival_time": current_stop["arrival_time"],
+            "trip": predecessor["trip"],
+            "departure_station": predecessor["last_station"],
+            "departure_time": predecessor["last_departure"],
+            "arrival_station": current_node,
+            "arrival_time": predecessor["current_arrival"],
             "arrival_distance": distances[current_node]
 
         }
         raw_route.append(edge)
-        current_node = previous_stop.parent
+        current_node = predecessor["last_station"]
     raw_route.reverse()
-    #TODO: je tu nejakej pruser
+    print(raw_route)
+    return raw_route
 
 
 if __name__ == "__main__":
@@ -243,4 +265,4 @@ if __name__ == "__main__":
     dijkstra_alfa(s_node, e_node)
 
 
-# To implement: route review and outputing, modular departure time, processing time saving measures, node traversing
+# To implement: route formating based on changes, modular departure time, processing time saving measures, node traversing
