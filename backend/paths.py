@@ -264,17 +264,29 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         }
         raw_route.append(edge)
         current_node = predecessor["last_station"]
+    print("reversing")
     raw_route.reverse()
-    print(raw_route)
     return raw_route
+
+
+def humanize_route(raw_route):
+    print("\nRoute:")
+    last_trip = None
+    for connection in raw_route:
+        if last_trip != connection["trip"]:
+            print(f"\n\n{connection["trip"].parent_line.short_name} - "
+                  f"{connection["departure_station"].name}", end="")
+        print(f" {str(connection["departure_time"])}")
+        print(f"-> {connection["arrival_station"].name} {connection["arrival_time"]}", end="")
+        last_trip = connection["trip"]
 
 
 if __name__ == "__main__":
     #s_node, e_node = get_end_nodes()
-    s_node = _stations[1029][0]
-    e_node = _stations[710][0]
-    dijkstra_alfa(s_node, e_node)
+    s_node = _stations[1040][0]
+    e_node = _stations[142][0]
+    route = dijkstra_alfa(s_node, e_node)
+    humanize_route(route)
 
-
-# To implement: route formating based on changes, modular departure time, processing time saving measures, node traversing
+# To implement: modular departure time, processing time saving measures, node traversing, start/end selection, fix the circulation of paths
 # Check what how does program react when you arrive at terminus
