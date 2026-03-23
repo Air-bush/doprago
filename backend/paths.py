@@ -65,6 +65,11 @@ def get_temp_transfer_time(line1:Line, line2:Line):
 def time_to_seconds(t):
     return (t // 10000) * 3600 + ((t // 100) % 100) * 60 + (t % 100)
 
+
+def seconds_to_time(s):
+    return (s // 3600) * 10000 + ((s % 3600) // 60) * 100 + (s % 60)
+
+
 def get_end_nodes():
     return console_end_nodes()
 
@@ -198,11 +203,10 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         if queued_distance != distances[current_node]:
             continue
 
-        departures = get_unique_departures_now(current_node, start_time+queued_distance)
+        departures = get_unique_departures_now(current_node, seconds_to_time(start_time+queued_distance))
         arrival = predecessors[current_node]
         if arrival:
-            #departures.append(arrival["departure_dict"])
-            pass
+            departures.append(arrival["departure_dict"])
 
         for departure in departures:
             print(departure)
@@ -219,13 +223,20 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
             if distances.get(neighbour, None) is None or new_distance < distances[neighbour]:
                 print("(IN QUEUE)", end="")
                 distances[neighbour] = new_distance
+                predecessor_next = {
+                    "trip": departure["trip"],
+                    "arrival_time": next_stop["arrival_time"],
+                    "departure_time": next_stop["departure_time"],
+                    "stop_index": next_stop_index,
+                    "stop_id": "" #TODO: Placeholder
+                }
                 predecessor_dict = {
                     "trip": departure["trip"],
                     "last_station": current_node,
                     "last_index": departure["stop_index"],
                     "last_departure": departure["departure_time"],
                     "current_arrival": next_stop["arrival_time"],
-                    "departure_dict": ""  # TODO: CONNECTION OF CURRENT TRIP DOES NOT WORK IT NEEDS TO BE DEPARTURE FROM THE NEXT STATION
+                    "departure_dict": predecessor_next
                 }
                 predecessors[neighbour] = predecessor_dict
                 real_distance_index = abs(end_pos[0]-neighbour.latitude) + abs(end_pos[1]-neighbour.longitude)
@@ -266,3 +277,4 @@ if __name__ == "__main__":
 
 
 # To implement: route formating based on changes, modular departure time, processing time saving measures, node traversing
+# Check what how does program react when you arrive at terminus
