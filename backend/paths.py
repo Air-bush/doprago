@@ -27,31 +27,28 @@ _stations, _stops, _lines, _service_ids = init_structures()
 # Amforova-Bus : 1029;47715
 
 def console_end_nodes():
-    print("Enter start (node;cis): ", end="")
-    start = input().split(';')
-    start_station = None
-    try:
-        start_found = False
-        for station in _stations[int(start[0])]:
-            if station.cis == int(start[1]):
-                start_station = station
-                start_found = True
-        if not start_found: raise Exception("InvalidStation")
-    except KeyError: raise Exception("InvalidStation")
+    start = input("Enter start (name-diacritics+space sensitive): ")
+    start_station = get_station_by_name(start)
+    if start is None:
+        raise Exception("InvalidStationName")
+    #start_found = False
+    #for station in _stations.get(int(start[0]), []):
+    #    if station.cis == int(start[1]):
+    #        start_station = station
+    #        start_found = True
+    #if not start_found: raise Exception("InvalidStation")
     print(f"Start: {start_station.name} ({start_station.main_traffic_type}) [{",".join(start_station.zones)}]\n")
 
-    print("Enter end (node;cis): ", end="")
-    end = input().split(';')
-    end_station = None
-    try:
-        end_found = False
-        for station in _stations[int(end[0])]:
-            if station.cis == int(end[1]):
-                end_station = station
-                end_found = True
-        if not end_found: raise Exception("InvalidStation")
-    except KeyError:
-        raise Exception("InvalidStation")
+    end = input("Enter end (name-diacritics+space sensitive): ")
+    end_station = get_station_by_name(end)
+    if end is None:
+        raise Exception("InvalidStationName")
+    #end_found = False
+    #for station in _stations[int(end[0])]:
+    #    if station.cis == int(end[1]):
+    #        end_station = station
+    #        end_found = True
+    #if not end_found: raise Exception("InvalidStation")
     print(f"End: {end_station.name} ({end_station.main_traffic_type}) [{",".join(end_station.zones)}]")
 
     return start_station,end_station
@@ -61,8 +58,16 @@ def get_temp_transfer_time(line1:Line, line2:Line):
     pass
 
 
-def get_station_by_name():
-    pass
+def get_station_by_name(target_name):
+    with open("stations.txt", "r", encoding="utf-8") as f:
+        for line in f:
+            name, node, cis = line.split(";")
+            if name.lower() == target_name.lower():
+                break
+    for s in _stations[int(node)]:
+        if s.cis == int(cis): return s
+    return None
+
 
 #---------------------------------------------------------------------------------------------------
 
@@ -286,9 +291,7 @@ def humanize_route(raw_route):
 
 
 if __name__ == "__main__":
-    #s_node, e_node = get_end_nodes()
-    s_node = _stations[1040][0]
-    e_node = _stations[142][0]
+    s_node, e_node = get_end_nodes()
     route = dijkstra_alfa(s_node, e_node)
     humanize_route(route)
 
