@@ -217,6 +217,12 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         if arrival:
             departures.append(arrival["departure_dict"])
 
+        if len(_stations[current_node.id] > 1):
+            for s in _stations[current_node.id]:
+                if s == current_node: continue
+                if s.main_traffic_type == "train":
+                    departures.extend(get_unique_departures_now(s, seconds_to_time(start_time+queued_distance)))
+
         for departure in departures:
             print(departure)
             print(departure["trip"].parent_line.short_name, end="; ")
