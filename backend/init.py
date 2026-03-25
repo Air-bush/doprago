@@ -44,6 +44,7 @@ update_gtfs()
 
 
 def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
+    save_file = open("stations.txt", "w", encoding="utf-8")
     all_stops = {}  # key: gtfs_id, value: Stop
     all_stations = {}  # key: node_id, value: Station !!!! VALUE MIGHT BE A LIST (IN CASE MULTIPLE STATIONS PER NODE)
     for raw_station in raw_stations:
@@ -51,6 +52,7 @@ def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
         gtfs_id = f"U{node_id}"
         cis = int(raw_station["cis"])
         name = raw_station["name"]
+        save_file.write(f"{name};{node_id};{cis}\n")
         latitude = float(raw_station["avgLat"])
         longitude = float(raw_station["avgLon"])
         main_traffic_type = raw_station["mainTrafficType"]
@@ -82,6 +84,7 @@ def init_stations(all_lines) -> tuple[dict, dict]:  # node:object/list
             all_stations[node_id].append(station)
         else:
             all_stations[node_id] = [station]
+    save_file.close()
     return all_stations, all_stops
 
 

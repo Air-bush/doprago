@@ -61,7 +61,11 @@ def get_temp_transfer_time(line1:Line, line2:Line):
     pass
 
 
+def get_station_by_name():
+    pass
+
 #---------------------------------------------------------------------------------------------------
+
 def time_to_seconds(t):
     return (t // 10000) * 3600 + ((t // 100) % 100) * 60 + (t % 100)
 
@@ -270,7 +274,7 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
 
 
 def humanize_route(raw_route):
-    print("\nRoute:")
+    print("\nRoute:", end="")
     last_trip = None
     for connection in raw_route:
         if last_trip != connection["trip"]:
