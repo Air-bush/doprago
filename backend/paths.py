@@ -202,6 +202,11 @@ def get_all_unique_departures(station: Station|Stop):
 
 def node_traversing(arrival_trip, current_station, queued_time) -> list:
     extra = []
+    if current_station.main_traffic_type == "train":  # Duplicate of if below
+        for s in _stations[current_station.id]:
+            if s == current_station: continue
+            extra.extend(get_unique_departures_now(current_station, queued_time))
+        return extra
     if arrival_trip and (arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2):
         for s in _stations[current_station.id]:
             if s == current_station: continue
