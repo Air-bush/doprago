@@ -27,6 +27,7 @@ _stations, _stops, _lines, _service_ids = init_structures()
 # Amforova-Bus : 1029;47715
 
 def console_end_nodes():
+    print("\n-------------------------------------------------")
     start = input("Enter start (name-diacritics+space sensitive): ")
     start_station = get_station_by_name(start)
     if start is None:
@@ -205,12 +206,12 @@ def node_traversing(arrival_trip, current_station, queued_time) -> list:
     if current_station.main_traffic_type == "train":  # Duplicate of if below
         for s in _stations[current_station.id]:
             if s == current_station: continue
-            extra.extend(get_unique_departures_now(current_station, queued_time))
+            extra.extend(get_unique_departures_now(s, queued_time))
         return extra
     if arrival_trip and (arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2):
         for s in _stations[current_station.id]:
             if s == current_station: continue
-            extra.extend(get_unique_departures_now(current_station, queued_time))
+            extra.extend(get_unique_departures_now(s, queued_time))
         return extra
     for s in _stations[current_station.id]:
         if s == current_station: continue
@@ -246,6 +247,9 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         arrival = predecessors[current_node]
         if arrival:
             departures.append(arrival["departure_dict"])
+        else:
+            extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
+            if len(extra) > 0: departures.extend(extra)
 
         if len(_stations[current_node.id]) > 1:
             extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
@@ -331,4 +335,5 @@ if __name__ == "__main__":
 
 # To implement: modular departure time, processing time saving measures, fix the circulation of paths
 # Fix departures from incorrect dates (maybe occurring)
+# TODO: fix getting stuck
 # Check what how does program react when you arrive at terminus
