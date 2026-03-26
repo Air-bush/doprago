@@ -202,7 +202,7 @@ def get_all_unique_departures(station: Station|Stop):
 
 def node_traversing(arrival_trip, current_station, queued_time) -> list:
     extra = []
-    if arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2:
+    if arrival_trip and (arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2):
         for s in _stations[current_station.id]:
             if s == current_station: continue
             extra.extend(get_unique_departures_now(current_station, queued_time))
@@ -221,7 +221,7 @@ def node_traversing(arrival_trip, current_station, queued_time) -> list:
 def dijkstra_alfa(start: Station, end: Station, departure_time=None):
     start_time = time_to_seconds(int(datetime.datetime.now().strftime("%H%M00")) + 100)
     distances = {start: 0} #Station: relative distance
-    predecessors = {start: None} #Station: movement dict (trip, arr, dep, i)
+    predecessors = {start: {}} #Station: movement dict (trip, arr, dep, i)
     relax_queue = [(0, 0, start)] #relative distance, distance from end, Station
     heapq.heapify(relax_queue)
     end_pos = [end.latitude, end.longitude]
@@ -325,4 +325,5 @@ if __name__ == "__main__":
     humanize_route(route)
 
 # To implement: modular departure time, processing time saving measures, fix the circulation of paths
+# Fix departures from incorrect dates (maybe occurring)
 # Check what how does program react when you arrive at terminus
