@@ -235,8 +235,14 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
     route_found = False
     while len(relax_queue) > 0:
         queued_distance, x, current_node = heapq.heappop(relax_queue)
+        arrival = predecessors[current_node]
         print("--" + current_node.name)
+
         if current_node == end:
+            route_found = True
+            break
+        if current_node.id == end.id and arrival["trip"].parent_line.type in [1,2]:
+            end = current_node
             route_found = True
             break
         if queued_distance != distances[current_node]:
@@ -244,7 +250,6 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
 
         queued_time = seconds_to_time(start_time+queued_distance)
         departures = get_unique_departures_now(current_node, queued_time)
-        arrival = predecessors[current_node]
         if arrival:
             departures.append(arrival["departure_dict"])
         else:
