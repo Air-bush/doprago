@@ -51,6 +51,9 @@ def console_end_nodes():
     #if not end_found: raise Exception("InvalidStation")
     print(f"End: {end_station.name} ({end_station.main_traffic_type}) [{",".join(end_station.zones)}]")
 
+    if not are_ends_valid(start_station, end_station):
+        raise Exception("InvalidRoute")
+
     return start_station,end_station
 
 
@@ -70,6 +73,9 @@ def get_station_by_name(target_name):
 
 
 #---------------------------------------------------------------------------------------------------
+def are_ends_valid(start, end):
+    return not start.id == end.id
+
 
 def time_to_seconds(t):
     return (t // 10000) * 3600 + ((t // 100) % 100) * 60 + (t % 100)
@@ -194,6 +200,24 @@ def get_all_unique_departures(station: Station|Stop):
     # Maybe search from sometime before now cause there could be services limited to daytime (e.g. night transport, substitutes, morning/evening service)
 
 
+def node_traversing(arrival_trip, current_station, queued_time) -> list|None:
+    extra = []
+    if arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2:
+        for s in _stations[current_station.id]:
+            if s == current_station: continue
+            extra.extend(get_unique_departures_now(current_station, queued_time))
+        return extra
+    for s in _stations[current_station.id]:
+        if s == current_station: continue
+        if s.main_traffic_type == "train":
+            extra.extend(get_unique_departures_now(s, queued_time))
+        elif s.main_traffic_type[0] == "m":
+            for sp in s.stops:
+                if sp.platform[0] == "M":
+                    extra.extend(get_unique_departures_now(sp, queued_time))
+    return extra
+
+
 def dijkstra_alfa(start: Station, end: Station, departure_time=None):
     start_time = time_to_seconds(int(datetime.datetime.now().strftime("%H%M00")) + 100)
     distances = {start: 0} #Station: relative distance
@@ -212,16 +236,15 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         if queued_distance != distances[current_node]:
             continue
 
-        departures = get_unique_departures_now(current_node, seconds_to_time(start_time+queued_distance))
+        queued_time = seconds_to_time(start_time+queued_distance)
+        departures = get_unique_departures_now(current_node, queued_time)
         arrival = predecessors[current_node]
         if arrival:
             departures.append(arrival["departure_dict"])
 
         if len(_stations[current_node.id] > 1):
-            for s in _stations[current_node.id]:
-                if s == current_node: continue
-                if s.main_traffic_type == "train":
-                    departures.extend(get_unique_departures_now(s, seconds_to_time(start_time+queued_distance)))
+            extra = node_traversing(arrival["trip"], current_node, queued_time)
+            if len(extra) > 0: departures.extend(extra)
 
         for departure in departures:
             print(departure)
