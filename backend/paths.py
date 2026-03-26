@@ -200,7 +200,7 @@ def get_all_unique_departures(station: Station|Stop):
     # Maybe search from sometime before now cause there could be services limited to daytime (e.g. night transport, substitutes, morning/evening service)
 
 
-def node_traversing(arrival_trip, current_station, queued_time) -> list|None:
+def node_traversing(arrival_trip, current_station, queued_time) -> list:
     extra = []
     if arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2:
         for s in _stations[current_station.id]:
@@ -212,8 +212,8 @@ def node_traversing(arrival_trip, current_station, queued_time) -> list|None:
         if s.main_traffic_type == "train":
             extra.extend(get_unique_departures_now(s, queued_time))
         elif s.main_traffic_type[0] == "m":
-            for sp in s.stops:
-                if sp.platform[0] == "M":
+            for sp in s.stops.values():
+                if sp.platform_code[0] == "M":
                     extra.extend(get_unique_departures_now(sp, queued_time))
     return extra
 
@@ -242,8 +242,8 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         if arrival:
             departures.append(arrival["departure_dict"])
 
-        if len(_stations[current_node.id] > 1):
-            extra = node_traversing(arrival["trip"], current_node, queued_time)
+        if len(_stations[current_node.id]) > 1:
+            extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
             if len(extra) > 0: departures.extend(extra)
 
         for departure in departures:
@@ -324,5 +324,5 @@ if __name__ == "__main__":
     route = dijkstra_alfa(s_node, e_node)
     humanize_route(route)
 
-# To implement: modular departure time, processing time saving measures, node traversing, start/end selection, fix the circulation of paths
+# To implement: modular departure time, processing time saving measures, fix the circulation of paths
 # Check what how does program react when you arrive at terminus
