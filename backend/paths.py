@@ -103,7 +103,7 @@ def is_departure_valid(departure:dict=None, date=None) -> bool:
         now = datetime.datetime.strptime(str(date), "%Y%m%d")
 
     schedule: ServiceSchedule = departure["trip"].service
-    day_of_week = int(now.strftime("%w"))-1
+    day_of_week = (int(now.strftime("%w"))+6) % 7  # Shifts day of the week by one (mon == 0 instead of sun)
     if schedule.service_id[day_of_week] == "0":
         return False
     if schedule.start_date > date:

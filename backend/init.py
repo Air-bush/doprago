@@ -172,7 +172,7 @@ def init_line_stations(all_routes: dict, all_stations: dict):
             current_route = stop_line["route_id"]
         if current_sequence.get(stop_line["direction_id"], None) is None:
             current_sequence[stop_line["direction_id"]] = []
-        for station in all_stations.get(int(stop_line["stop_id"][1:].split("Z")[0]), []):
+        for station in all_stations.get(int(stop_line["stop_id"][1:].split("Z")[0]), []):  # TODO: Warning ignores line stops not in api
             for stop in station.stops.values():
                 if stop_line["stop_id"] in stop.gtfs_ids:
                     current_sequence[stop_line["direction_id"]].append(stop)
