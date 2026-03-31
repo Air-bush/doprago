@@ -11,6 +11,7 @@
 import bisect
 import datetime
 import heapq
+import calendar
 
 from structs import *
 from init import init_structures
@@ -131,7 +132,12 @@ def get_next_departure(station: Station|Stop, index, time, date=None):
     while True:
         if index >= len(station.all_movements):
             index = 0
-            date += 1  # TODO: WARNING WONT WORK AT END OF MONTH EVENING
+            date += 1
+            days_in_month = calendar.monthrange(date // 10000, (date // 100) % 100)[1]
+            if date > days_in_month:  # Flipping month if days exceed the number of days
+                date -= days_in_month  # Date is max+1 when subtracting max 1 is left over
+                date += 100
+                # Breaks when at the end of the year
         departure = station.all_movements[index]
         if is_departure_valid(departure, date):
             return departure, index+1
