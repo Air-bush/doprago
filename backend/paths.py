@@ -104,7 +104,7 @@ def is_departure_valid(departure:dict=None, date=None) -> bool:
         now = datetime.datetime.strptime(str(date), "%Y%m%d")
 
     schedule: ServiceSchedule = departure["trip"].service
-    day_of_week = (int(now.strftime("%w"))+6) % 7  # Shifts day of the week by one (mon == 0 instead of sun)
+    day_of_week = int(now.weekday())  # mon == 0
     if schedule.service_id[day_of_week] == "0":
         return False
     if schedule.start_date > date:
@@ -134,7 +134,7 @@ def get_next_departure(station: Station|Stop, index, time, date=None):
             index = 0
             date += 1
             days_in_month = calendar.monthrange(date // 10000, (date // 100) % 100)[1]
-            if date > days_in_month:  # Flipping month if days exceed the number of days
+            if date % 100 > days_in_month:  # Flipping month if days exceed the number of days
                 date -= days_in_month  # Date is max+1 when subtracting max 1 is left over
                 date += 100
                 # Breaks when at the end of the year
@@ -347,4 +347,5 @@ if __name__ == "__main__":
 # To implement: modular departure time, processing time saving measures, fix the circulation of paths
 # Fix departures from incorrect dates (maybe occurring)
 # TODO: fix getting stuck
+# TODO: fix queued_time becoming negative a lot when advancing day or even month
 # Check what how does program react when you arrive at terminus
