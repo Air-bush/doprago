@@ -100,11 +100,9 @@ def is_departure_valid(departure:dict=None, date=None) -> bool:
     if not date:
         now = datetime.datetime.now()
         date = int(now.strftime("%Y%m%d"))
-    else:
-        now = datetime.datetime.strptime(str(date), "%Y%m%d")
 
     schedule: ServiceSchedule = departure["trip"].service
-    day_of_week = int(now.weekday())  # mon == 0
+    day_of_week = calendar.weekday(date // 10000, (date // 100) % 100, date % 100)  # mon == 0
     if schedule.service_id[day_of_week] == "0":
         return False
     if schedule.start_date > date:
@@ -263,9 +261,10 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
             if len(extra) > 0: departures.extend(extra)
 
         if len(_stations[current_node.id]) > 1:
+            print("Node traversing")
             extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
             if len(extra) > 0: departures.extend(extra)
-
+        print("Going for departures")
         for departure in departures:
             print(departure)
             print(departure["trip"].parent_line.short_name, end="; ")
@@ -342,10 +341,13 @@ def humanize_route(raw_route):
 if __name__ == "__main__":
     s_node, e_node = get_end_nodes()
     route = dijkstra_alfa(s_node, e_node)
+    if route == {}:
+        print("Error...")
     humanize_route(route)
 
 # To implement: modular departure time, processing time saving measures, fix the circulation of paths
 # Fix departures from incorrect dates (maybe occurring)
 # TODO: fix getting stuck
 # TODO: fix queued_time becoming negative a lot when advancing day or even month
+# TODO: algorithm prefers the earliest arrival even though time for transfer makes you depart later than if you took and continued on other connection
 # Check what how does program react when you arrive at terminus
