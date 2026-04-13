@@ -260,14 +260,11 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         departures = get_unique_departures_now(current_node, queued_time)
         if arrival:
             departures.append(arrival["departure_dict"])
-        else:
-            extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
-            if len(extra) > 0: departures.extend(extra)
 
-        if len(_stations[current_node.id]) > 1:
-            print("Node traversing")
-            extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
-            if len(extra) > 0: departures.extend(extra)
+        #if len(_stations[current_node.id]) > 1:
+        #    print("Node traversing")
+        #    extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
+        #    if len(extra) > 0: departures.extend(extra)
         print("Going for departures")
         for departure in departures:
             print(departure)
@@ -349,11 +346,12 @@ if __name__ == "__main__":
         if route == {}:
             print("Error...")
         humanize_route(route)
-        print("\n------------------------------------------------------------\n")
+        print("\n-------------------------------------------------\n")
 
 # To implement: modular departure time, processing time saving measures, fix the circulation of paths
 # Fix departures from incorrect dates (maybe occurring)
 # TODO: fix getting stuck
 # TODO: fix queued_time becoming negative a lot when advancing day or even month
 # TODO: algorithm prefers the earliest arrival even though time for transfer makes you depart later than if you took and continued on other connection
+# TODO: fix node traversing creating list out of range
 # Check what how does program react when you arrive at terminus
