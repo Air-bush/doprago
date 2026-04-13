@@ -64,11 +64,15 @@ def get_temp_transfer_time(line1:Line, line2:Line):
 
 
 def get_station_by_name(target_name):
+    found = False
     with open("stations.txt", "r", encoding="utf-8") as f:
         for line in f:
             name, node, cis = line.split(";")
             if name.lower() == target_name.lower():
+                found = True
                 break
+    if not found:
+        return None
     for s in _stations[int(node)]:
         if s.cis == int(cis): return s
     return None
@@ -339,11 +343,13 @@ def humanize_route(raw_route):
 
 
 if __name__ == "__main__":
-    s_node, e_node = get_end_nodes()
-    route = dijkstra_alfa(s_node, e_node)
-    if route == {}:
-        print("Error...")
-    humanize_route(route)
+    while True:
+        s_node, e_node = get_end_nodes()
+        route = dijkstra_alfa(s_node, e_node)
+        if route == {}:
+            print("Error...")
+        humanize_route(route)
+        print("\n------------------------------------------------------------\n")
 
 # To implement: modular departure time, processing time saving measures, fix the circulation of paths
 # Fix departures from incorrect dates (maybe occurring)
