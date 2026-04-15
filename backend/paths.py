@@ -163,6 +163,9 @@ def get_departures(station: Station|Stop, time=None, padding=3, default_count=10
         now = datetime.datetime.now()
         time = int(now.strftime("%H%M%S"))
 
+    if len(station.all_movements) == 0:
+        return []
+
     departures = get_departures_strict(station, time, default_count, padding)
 
     if time + LONGEST_TO_LAST_DEPARTURE >= departures[len(departures)-1]["departure_time"] >= time + CLOSEST_TO_LAST_DEPARTURE:
@@ -212,11 +215,13 @@ def get_all_unique_departures(station: Station|Stop):
 def node_traversing(arrival_trip, current_station, queued_time) -> list:
     extra = []
     if current_station.main_traffic_type == "train":  # Duplicate of if below
+        print("On train")
         for s in _stations[current_station.id]:
             if s == current_station: continue
             extra.extend(get_unique_departures_now(s, queued_time))
         return extra
     if arrival_trip and (arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2):
+        print("Arrived metro")
         for s in _stations[current_station.id]:
             if s == current_station: continue
             extra.extend(get_unique_departures_now(s, queued_time))
@@ -224,8 +229,10 @@ def node_traversing(arrival_trip, current_station, queued_time) -> list:
     for s in _stations[current_station.id]:
         if s == current_station: continue
         if s.main_traffic_type == "train":
+            print("Train available")
             extra.extend(get_unique_departures_now(s, queued_time))
         elif s.main_traffic_type[0] == "m":
+            print("Found metro")
             for sp in s.stops.values():
                 if sp.platform_code[0] == "M":
                     extra.extend(get_unique_departures_now(sp, queued_time))
@@ -261,10 +268,10 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
         if arrival:
             departures.append(arrival["departure_dict"])
 
-        #if len(_stations[current_node.id]) > 1:
-        #    print("Node traversing")
-        #    extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
-        #    if len(extra) > 0: departures.extend(extra)
+        if len(_stations[current_node.id]) > 1:
+            print("Node traversing")
+            extra = node_traversing(arrival.get("trip", None), current_node, queued_time)
+            if len(extra) > 0: departures.extend(extra)
         print("Going for departures")
         for departure in departures:
             print(departure)
@@ -353,5 +360,4 @@ if __name__ == "__main__":
 # TODO: fix getting stuck
 # TODO: fix queued_time becoming negative a lot when advancing day or even month
 # TODO: algorithm prefers the earliest arrival even though time for transfer makes you depart later than if you took and continued on other connection
-# TODO: fix node traversing creating list out of range
 # Check what how does program react when you arrive at terminus
