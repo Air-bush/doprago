@@ -282,6 +282,8 @@ def dijkstra_alfa(start: Station, end: Station, departure_time=None):
                 continue
             next_stop = departure["trip"].stops[next_stop_index]
             new_distance: int = time_to_seconds(next_stop["arrival_time"]) - start_time
+            if new_distance < 0:
+                new_distance += 86400
             neighbour = next_stop["stop"].parent
             print(neighbour.name, end=" ")
             print(next_stop["arrival_time"], end=" ")

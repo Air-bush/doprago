@@ -204,7 +204,7 @@ def insort_trip_to_stop(ms:list, m:dict):
     bisect.insort(ms, m, key=lambda move: move["departure_time"])
 
 
-def init_trips(all_lines, all_service_ids, all_stops):
+def init_trips(all_lines, all_service_ids, all_stops, all_stations):
     trips_list = {}  # Key: trip_id; Val: Trip => only temporary before line sorting
     all_trips = {}  # Key: Line { Key: direction_id { Key: day of the week { Trips[] } } }
     with open(GTFS_LOCATION + "trips.txt", encoding="UTF-8") as trip_file:
@@ -243,7 +243,7 @@ def init_trips(all_lines, all_service_ids, all_stops):
 
         current_trip = trips_list[stop_time["trip_id"]]
         stop_time_dict = {
-            "stop": all_stops[stop_time["stop_id"]],
+            "stop": all_stops.get(stop_time["stop_id"], stop_time["stop_id"]),  # TODO: Every not know station from Api gets skipped
             "arrival_time": int(stop_time["arrival_time"].replace(":","")),
             "departure_time": int(stop_time["departure_time"].replace(":",""))
         }
@@ -257,7 +257,9 @@ def init_trips(all_lines, all_service_ids, all_stops):
             "stop_index": i
         }
         if type(movement_dict["trip"]) != structs.Trip: print(type(movement_dict["trip"]))
-        current_stop = all_stops[stop_time["stop_id"]]
+        current_stop = all_stops.get(stop_time["stop_id"], None)
+        if not current_stop:
+            continue
         insort_trip_to_stop(current_stop.all_movements, movement_dict)
 
         movement_dict["stop_id"] = current_stop.id
@@ -275,7 +277,7 @@ def init_structures():
     all_lines = init_lines()
     all_stations, all_stops = init_stations(all_lines)
     init_line_stations(all_lines, all_stations)
-    init_trips(all_lines, all_service_ids, all_stops)
+    init_trips(all_lines, all_service_ids, all_stops, all_stations)
     print("---INIT COMPLETED---")
     return all_stations, all_stops, all_lines, all_service_ids
 
