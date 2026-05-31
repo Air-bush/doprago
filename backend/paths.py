@@ -171,8 +171,11 @@ def get_departures(station: Station|Stop, time=None, padding=3, default_count=10
     if time + LONGEST_TO_LAST_DEPARTURE >= departures[len(departures)-1]["departure_time"] >= time + CLOSEST_TO_LAST_DEPARTURE:
         return departures
 
-    if departures[MINIMUM_DEPARTURE_COUNT]["departure_time"] > time + LONGEST_TO_LAST_DEPARTURE:
+    if departures[len(departures)-1]["departure_time"] > time + LONGEST_TO_LAST_DEPARTURE:
         pos = bisect.bisect_left(departures, time+LONGEST_TO_LAST_DEPARTURE, key=lambda d: d["departure_time"])
+        if pos == 0: return []
+        elif pos < MINIMUM_DEPARTURE_COUNT:
+            return departures[:MINIMUM_DEPARTURE_COUNT]
         return departures[:pos]
     else:
         i = find_closest_departure(station,departures[len(departures)-1]["departure_time"]) + 1
@@ -218,24 +221,36 @@ def node_traversing(arrival_trip, current_station, queued_time) -> list:
         print("On train")
         for s in _stations[current_station.id]:
             if s == current_station: continue
-            extra.extend(get_unique_departures_now(s, queued_time))
+            print("extending")
+            d = get_unique_departures_now(s, queued_time)
+            print("ready")
+            extra.extend(d)
+            print("extended")
         return extra
     if arrival_trip and (arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2):
         print("Arrived metro")
         for s in _stations[current_station.id]:
             if s == current_station: continue
-            extra.extend(get_unique_departures_now(s, queued_time))
+            print("extending")
+            print(s.to_string())
+            d = get_unique_departures_now(s, queued_time)
+            print("ready")
+            extra.extend(d)
+            print("extended")
         return extra
     for s in _stations[current_station.id]:
         if s == current_station: continue
         if s.main_traffic_type == "train":
             print("Train available")
             extra.extend(get_unique_departures_now(s, queued_time))
+            print("extended")
         elif s.main_traffic_type[0] == "m":
             print("Found metro")
             for sp in s.stops.values():
                 if sp.platform_code[0] == "M":
+                    print("extending")
                     extra.extend(get_unique_departures_now(sp, queued_time))
+                    print("extended")
     return extra
 
 
