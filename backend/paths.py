@@ -181,8 +181,9 @@ def get_departures(station: Station|Stop, time=None, padding=3, default_count=10
         i = find_closest_departure(station,departures[len(departures)-1]["departure_time"]) + 1
         while True:
             next_departure, i = get_next_departure(station, i, time)
-            departures.append(next_departure)
             if next_departure["departure_time"] >= time + CLOSEST_TO_LAST_DEPARTURE: break
+            if next_departure["departure_time"] < time: break
+            departures.append(next_departure)
     return departures
 
 
@@ -221,36 +222,26 @@ def node_traversing(arrival_trip, current_station, queued_time) -> list:
         print("On train")
         for s in _stations[current_station.id]:
             if s == current_station: continue
-            print("extending")
             d = get_unique_departures_now(s, queued_time)
-            print("ready")
             extra.extend(d)
-            print("extended")
         return extra
     if arrival_trip and (arrival_trip.parent_line.type == 1 or arrival_trip.parent_line.type == 2):
         print("Arrived metro")
         for s in _stations[current_station.id]:
             if s == current_station: continue
-            print("extending")
-            print(s.to_string())
             d = get_unique_departures_now(s, queued_time)
-            print("ready")
             extra.extend(d)
-            print("extended")
         return extra
     for s in _stations[current_station.id]:
         if s == current_station: continue
         if s.main_traffic_type == "train":
             print("Train available")
             extra.extend(get_unique_departures_now(s, queued_time))
-            print("extended")
         elif s.main_traffic_type[0] == "m":
             print("Found metro")
             for sp in s.stops.values():
                 if sp.platform_code[0] == "M":
-                    print("extending")
                     extra.extend(get_unique_departures_now(sp, queued_time))
-                    print("extended")
     return extra
 
 
