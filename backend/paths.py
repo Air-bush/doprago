@@ -179,8 +179,12 @@ def get_departures(station: Station|Stop, time=None, padding=3, default_count=10
         return departures[:pos]
     else:
         i = find_closest_departure(station,departures[len(departures)-1]["departure_time"]) + 1
+        lasti = i
         while True:
             next_departure, i = get_next_departure(station, i, time)
+            if i == lasti: break
+            lasti = i
+            print(str(next_departure["departure_time"]) + ", " + str(time + CLOSEST_TO_LAST_DEPARTURE))
             if next_departure["departure_time"] >= time + CLOSEST_TO_LAST_DEPARTURE: break
             if next_departure["departure_time"] < time: break
             departures.append(next_departure)
